@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id           String         @id @default(uuid())
+    email        String         @unique
+    password     String
+    name         String?
+    isDeleted    Boolean        @default(false)
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    roles        Role[]         @relation("UserRoles")
+    pwdAdmins    PwdAdmin[]
+    permissions  Permission[]   @relation("UserPermissions")
+    attributes   UserAttribute[] // Relación con atributos personalizados
+}
+
+
+model Role {
+    id          String   @id @default(uuid())
+    name        String   @unique // ej. "admin", "user"
+    description String?  // Descripción opcional del rol
+    users       User[]   @relation("UserRoles") // Muchos-a-muchos con User
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
+
+
+model PwdAdmin {
+    id           String    @id @default(uuid())
+    user         User      @relation(fields: [userId], references: [id])
+    userId       String
+    passwordHash String    // Hash de la contraseña histórica
+    createdAt    DateTime  @default(now()) // Fecha de creación de esta contraseña
+    expiresAt    DateTime? // Fecha de vencimiento (para actualización)
+    isActive     Boolean   @default(true) // Si sigue siendo válida
+    lastUsedAt   DateTime? // Última vez que se usó (opcional)
+    mustChange   Boolean   @default(false) // Indica si debe cambiarse
+
+    @@index([userId])
+    @@unique([userId, passwordHash]) // Evita contraseñas repetidas por usuario
+}
+
+
+model Permission {
+    id        String         @id @default(uuid())
+    apiId     String
+    user      User           @relation("UserPermissions", fields: [userId], references: [id])
+    userId    String
+    token     String
+    isActive  Boolean        @default(true)
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    attributes UserAttribute[] // Relación con atributos por permiso
+
+    @@index([apiId, userId])
+    @@unique([apiId, userId, token])
+}
+
+model UserAttribute {
+    id          String     @id @default(uuid())
+    user        User       @relation(fields: [userId], references: [id])
+    userId      String
+    permission  Permission @relation(fields: [permissionId], references: [id])
+    permissionId String
+    key         String     // Nombre del atributo (ej. "points")
+    value       String     // Valor del atributo (ej. "100")
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+
+    @@index([userId, permissionId])
+    @@unique([userId, permissionId, key]) // Evita duplicados de atributos por usuario-permiso
+}
