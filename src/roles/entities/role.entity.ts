@@ -1,9 +1,10 @@
-import { ObjectType, Field } from '@nestjs/graphql';
-import { User } from './user.entity';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
+
 
 @ObjectType()
 export class Role {
-    @Field(() => String)
+
+    @Field( () => ID )
     id: string;
 
     @Field()
@@ -12,12 +13,13 @@ export class Role {
     @Field(() => String, { nullable: true })
     description?: string;
 
-    @Field(() => [User], { nullable: true })
-    users?: User[];
+    @Field(() => String , { nullable: true })
+    userId: string;
 
     @Field()
     createdAt: Date;
 
     @Field()
     updatedAt: Date;
+
 }

@@ -19,7 +19,7 @@ import { AppModule } from './app.module';
         credentials     : true,
         methods         : [ "GET", "POST", "PUT", "DELETE" ],
         allowedHeaders  : [ "Content-Type", "Authorization" ],
-    })
+    });
 
     await app.listen( process.env.PORT ?? 3000 );
     logger.log( `GuardianAPI listening on port ${ process.env.PORT ?? 3000 }` );

@@ -2,16 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type UserAttribute {
-  key: String!
-  value: String!
-}
-
 type Role {
-  id: String!
+  id: ID!
   name: String!
   description: String
-  users: [User!]
+  userId: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -21,34 +16,154 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type User {
-  id: String!
-  email: String!
-  name: String
-  isDeleted: Boolean!
+type Secret {
+  id: ID!
+  secret: String!
+  expiresAt: DateTime
+  isActive: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+type UserAttribute {
+  key: String!
+  value: String!
+}
+
+type PwdAdmin {
+  id: ID!
+  passwordHash: String!
+  expiresAt: DateTime
+  isActive: Boolean!
+  lastUsedAt: DateTime
+  mustChange: Boolean!
+  createdAt: DateTime!
+}
+
+type UserRole {
+  id: ID!
+  isActive: Boolean!
+  role: Role!
+}
+
+type User {
+  id: ID!
+  email: String!
+  nickname: String
+  name: String
+  birthdate: DateTime
+  isDeleted: Boolean!
+  isActive: Boolean!
+  avatar: String
+  googleId: String
+  microsoftId: String
+  facebookId: String
+  githubId: String
+  appleId: String
+  otherId: String
+  apiUserId: String
+  apiUser: User
+  users: [User!]
   roles: [Role!]
+  userRoles: [UserRole!]
+  secrets: [Secret!]
+  pwdAdmins: [PwdAdmin!]
   attributes: [UserAttribute!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type Query {
   users: [User!]!
-  user(id: Int!): User!
+  user(id: ID!): User!
+  roles: [Role!]!
+  role(id: ID!): Role!
+  userAttribute(id: Int!): UserAttribute!
+  pwdAdmin(id: Int!): PwdAdmin!
+  secrets: [Secret!]!
+  secret(id: Int!): Secret!
 }
 
 type Mutation {
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
-  removeUser(id: Int!): User!
+  removeUser(id: ID!): User!
+  createRole(createRoleInput: CreateRoleInput!): Role!
+  assignRoleToUser(roleId: ID!, userId: ID!): Role!
+  updateRole(updateRoleInput: UpdateRoleInput!): Role!
+  removeRole(id: ID!): Role!
+  createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!
+  updateUserAttribute(updateUserAttributeInput: UpdateUserAttributeInput!): UserAttribute!
+  removeUserAttribute(id: Int!): UserAttribute!
+  createPwdAdmin(createPwdAdminInput: CreatePwdAdminInput!): PwdAdmin!
+  updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
+  removePwdAdmin(id: Int!): PwdAdmin!
+  createSecret(createSecretInput: CreateSecretInput!): Secret!
+  updateSecret(updateSecretInput: UpdateSecretInput!): Secret!
+  removeSecret(id: Int!): Secret!
 }
 
 input CreateUserInput {
+  email: String!
+  password: String!
+  nickname: String
+  name: String
+  birthdate: DateTime
+  avatar: String
+  apiUserId: String
+}
+
+input UpdateUserInput {
+  email: String
+  password: String
+  nickname: String
+  name: String
+  birthdate: DateTime
+  avatar: String
+  apiUserId: String
+}
+
+input CreateRoleInput {
+  name: String!
+  description: String
+  userId: String
+}
+
+input UpdateRoleInput {
+  name: String
+  description: String
+  userId: String
+  id: ID!
+}
+
+input CreateUserAttributeInput {
   """Example field (placeholder)"""
   exampleField: Int!
 }
 
-input UpdateUserInput {
+input UpdateUserAttributeInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreatePwdAdminInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdatePwdAdminInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreateSecretInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateSecretInput {
   """Example field (placeholder)"""
   exampleField: Int
   id: Int!

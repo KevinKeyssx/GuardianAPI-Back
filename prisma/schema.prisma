@@ -14,72 +14,116 @@ datasource db {
 }
 
 model User {
-    id           String         @id @default(uuid())
-    email        String         @unique
-    password     String
+    id           String       @id @default(uuid())
+    email        String       @unique
+    nickname     String?      @unique
     name         String?
-    isDeleted    Boolean        @default(false)
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime       @updatedAt
-    roles        Role[]         @relation("UserRoles")
-    pwdAdmins    PwdAdmin[]
-    permissions  Permission[]   @relation("UserPermissions")
-    attributes   UserAttribute[] // Relación con atributos personalizados
-}
+    birthdate    DateTime?
+    isDeleted    Boolean      @default(false)
+    isActive     Boolean      @default(true)
+    avatar       String?
 
+    googleId     String?
+    microsoftId  String?
+    facebookId   String?
+    githubId     String?
+    appleId      String?
+    otherId      String?
+
+    // Relación para identificar una cuenta API (padre) y sus usuarios asociados (hijos)
+    // Si el usuario es creado por una cuenta API, se almacena el id de esa cuenta en apiUserId.
+    apiUserId    String?
+    apiUser      User?        @relation("ApiUserHierarchy", fields: [apiUserId], references: [id])
+    users        User[]       @relation("ApiUserHierarchy")
+    roles        Role[]       // Relación inversa con Role (si una cuenta API tiene roles específicos)
+    secrets      Secret[]
+    pwdAdmins    PwdAdmin[]
+    attributes   UserAttribute[]
+    userRoles    UserRole[]
+
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
+
+    @@index([isActive, isDeleted, apiUserId])
+}
 
 model Role {
-    id          String   @id @default(uuid())
-    name        String   @unique // ej. "admin", "user"
-    description String?  // Descripción opcional del rol
-    users       User[]   @relation("UserRoles") // Muchos-a-muchos con User
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-}
+    id          String    @id @default(uuid())
+    name        String    @unique
+    description String?
 
+    // Opcional: si el rol es específico para una cuenta API, se asocia a esa cuenta.
+    userId   String?
+    user     User?     @relation(fields: [userId], references: [id])
 
-model PwdAdmin {
-    id           String    @id @default(uuid())
-    user         User      @relation(fields: [userId], references: [id])
-    userId       String
-    passwordHash String    // Hash de la contraseña histórica
-    createdAt    DateTime  @default(now()) // Fecha de creación de esta contraseña
-    expiresAt    DateTime? // Fecha de vencimiento (para actualización)
-    isActive     Boolean   @default(true) // Si sigue siendo válida
-    lastUsedAt   DateTime? // Última vez que se usó (opcional)
-    mustChange   Boolean   @default(false) // Indica si debe cambiarse
+    userRoles   UserRole[]
 
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@unique([userId, name])
     @@index([userId])
-    @@unique([userId, passwordHash]) // Evita contraseñas repetidas por usuario
 }
 
+model UserRole {
+    id         String   @id @default(uuid())
+    isActive   Boolean  @default(true)
 
-model Permission {
-    id        String         @id @default(uuid())
-    apiId     String
-    user      User           @relation("UserPermissions", fields: [userId], references: [id])
-    userId    String
-    token     String
-    isActive  Boolean        @default(true)
-    createdAt DateTime       @default(now())
-    updatedAt DateTime       @updatedAt
-    attributes UserAttribute[] // Relación con atributos por permiso
+    user       User     @relation(fields: [userId], references: [id])
+    userId     String
 
-    @@index([apiId, userId])
-    @@unique([apiId, userId, token])
+    role       Role     @relation(fields: [roleId], references: [id])
+    roleId     String
+
+    @@index([userId, roleId, isActive])
+    @@unique([userId, roleId])
+}
+
+model Secret {
+    id         String   @id @default(uuid())
+    secret     String   // El secreto para la cuenta API
+    expiresAt  DateTime?
+    isActive   Boolean  @default(true)
+
+    // Este secreto se asocia a la cuenta API (es decir, a un User que tenga asignado el rol "API")
+    apiUserId  String
+    apiUser    User     @relation(fields: [apiUserId], references: [id])
+
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    @@unique([secret])
 }
 
 model UserAttribute {
-    id          String     @id @default(uuid())
-    user        User       @relation(fields: [userId], references: [id])
-    userId      String
-    permission  Permission @relation(fields: [permissionId], references: [id])
-    permissionId String
-    key         String     // Nombre del atributo (ej. "points")
-    value       String     // Valor del atributo (ej. "100")
-    createdAt   DateTime   @default(now())
-    updatedAt   DateTime   @updatedAt
+    id          String    @id @default(uuid())
+    key         String    // Nombre del atributo (ej.: "points")
+    value       String    // Valor del atributo (ej.: "100")
+    isActive    Boolean   @default(true)
 
-    @@index([userId, permissionId])
-    @@unique([userId, permissionId, key]) // Evita duplicados de atributos por usuario-permiso
+    user        User      @relation(fields: [userId], references: [id])
+    userId      String
+
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([userId])
+    @@unique([userId, key])
+}
+
+model PwdAdmin {
+    id           String   @id @default(uuid())
+    passwordHash String   // Hash de la contraseña histórica
+    expiresAt    DateTime?
+    isActive     Boolean  @default(true)
+    lastUsedAt   DateTime?
+    mustChange   Boolean  @default(false)
+
+    user         User     @relation(fields: [userId], references: [id])
+    userId       String
+
+    createdAt    DateTime @default(now())
+
+    @@index([userId])
+    @@unique([userId, passwordHash])
 }
