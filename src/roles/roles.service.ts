@@ -18,6 +18,14 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         this.$connect();
     }
 
+    async #validUserById( id: string ): Promise<void> {
+        const user = await this.user.findUnique({
+            where: { id }
+        })
+
+        if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
+    }
+
 
     async #validName( name: string ): Promise<void> {
         const role = await this.role.findUnique({
@@ -44,12 +52,27 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         userId: string
     ): Promise<UserRole> {
         await this.findOne( roleId );
-        // TODO: Validate user
+        await this.#validUserById( userId );
+
+        const roleUser = await this.userRole.findUnique({
+            where: {
+                userId_roleId: {
+                    userId,
+                    roleId
+                }
+            }
+        });
+
+        if ( roleUser ) throw new BadRequestException( 'Role already assigned to user' );
 
         return this.userRole.create({
             data: {
                 userId,
                 roleId
+            },
+            include: {
+                role: true,
+                user: true
             }
         });
     }

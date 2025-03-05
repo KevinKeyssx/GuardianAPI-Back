@@ -43,6 +43,7 @@ type PwdAdmin {
 type UserRole {
   id: ID!
   isActive: Boolean!
+  user: User!
   role: Role!
 }
 
@@ -89,7 +90,7 @@ type Mutation {
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
   createRole(createRoleInput: CreateRoleInput!): Role!
-  assignRoleToUser(roleId: ID!, userId: ID!): Role!
+  assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
   removeRole(id: ID!): Role!
   createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!

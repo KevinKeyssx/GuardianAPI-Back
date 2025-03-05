@@ -1,26 +1,22 @@
 import { Field, ID, ObjectType } from "@nestjs/graphql";
-import { Role } from "./role.entity";
+
+import { User } from "@user/entities/user.entity";
+import { Role } from "@roles/entities/role.entity";
+
 
 @ObjectType()
 export class UserRole {
 
-    @Field(() => ID)
+    @Field( () => ID )
     id: string;
 
-    @Field(() => Boolean)
+    @Field( () => Boolean )
     isActive: boolean;
 
-    // @Field(() => String)
-    // userId: string;
+    @Field( () => User )
+    user: User;
 
-    // @Field(() => User)
-    // user: User;
-
-    // @Field(() => String)
-    // roleId: string;
-
-    @Field(() => Role)
+    @Field( () => Role )
     role: Role;
-
 
 }
