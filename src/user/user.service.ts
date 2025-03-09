@@ -60,8 +60,8 @@ export class UserService extends PrismaClient implements OnModuleInit {
 
         await this.pwdAdmin.create({
             data: {
-                passwordHash    : password,
-                userId          : newUser.id
+                password,
+                userId: newUser.id
             }
         });
 

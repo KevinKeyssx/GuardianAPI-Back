@@ -1,26 +1,45 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserAttributeInput } from './dto/create-user-attribute.input';
-import { UpdateUserAttributeInput } from './dto/update-user-attribute.input';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+
+import { PrismaClient, UserAttribute } from '@prisma/client';
+
+import { CreateUserAttributeInput } from '@user-attribute/dto/create-user-attribute.input';
+import { UpdateUserAttributeInput } from '@user-attribute/dto/update-user-attribute.input';
 
 @Injectable()
-export class UserAttributeService {
-  create(createUserAttributeInput: CreateUserAttributeInput) {
-    return 'This action adds a new userAttribute';
-  }
+export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
-  findAll() {
-    return `This action returns all userAttribute`;
-  }
+    onModuleInit() {
+		this.$connect();
+	}
 
-  findOne(id: number) {
-    return `This action returns a #${id} userAttribute`;
-  }
 
-  update(id: number, updateUserAttributeInput: UpdateUserAttributeInput) {
-    return `This action updates a #${id} userAttribute`;
-  }
+    async create(
+        createUserAttributeInput: CreateUserAttributeInput
+    ): Promise<UserAttribute> {
+        return this.userAttribute.create({
+            data: createUserAttributeInput
+        });
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} userAttribute`;
-  }
+
+    findAll() {
+        return `This action returns all userAttribute`;
+    }
+
+
+    findOne(id: string) {
+        return `This action returns a #${id} userAttribute`;
+    }
+
+
+    update(
+        updateUserAttributeInput: UpdateUserAttributeInput
+    ) {
+        return `This action updates a #${updateUserAttributeInput.id} userAttribute`;
+    }
+
+
+    remove( id: string ) {
+        return `This action removes a #${id} userAttribute`;
+    }
 }

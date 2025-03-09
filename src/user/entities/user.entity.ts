@@ -1,7 +1,7 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 import { Role }             from '@roles/entities/role.entity';
-import { Secret }           from '@secrets/entities/secret.entity';
+import { SecretEntity }     from '@secrets/entities/secret.entity';
 import { UserAttribute }    from '@user-attribute/entities/user-attribute.entity';
 import { PwdAdmin }         from '@pwd-admin/entities/pwd-admin.entity';
 import { UserRole }         from '@roles/entities/user-role.entity';
@@ -67,8 +67,8 @@ export class User {
     @Field(() => [UserRole], { nullable: true })
     userRoles?: UserRole[];
 
-    @Field(() => [Secret], { nullable: true })
-    secrets?: Secret[];
+    @Field(() => [SecretEntity], { nullable: true })
+    secrets?: SecretEntity[];
 
     @Field(() => [PwdAdmin], { nullable: true })
     pwdAdmins?: PwdAdmin[];

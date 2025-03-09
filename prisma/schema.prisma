@@ -22,6 +22,7 @@ model User {
     isDeleted    Boolean      @default(false)
     isActive     Boolean      @default(true)
     avatar       String?
+    phone        String?
 
     googleId     String?
     microsoftId  String?
@@ -81,7 +82,7 @@ model UserRole {
 
 model Secret {
     id         String   @id @default(uuid())
-    secret     String   // El secreto para la cuenta API
+    secret     String   @unique// El secreto para la cuenta API
     expiresAt  DateTime?
     isActive   Boolean  @default(true)
 
@@ -92,14 +93,37 @@ model Secret {
     createdAt  DateTime @default(now())
     updatedAt  DateTime @updatedAt
 
-    @@unique([secret])
+    @@index([apiUserId, isActive])
+}
+
+enum AttributeType {
+    STRING
+    NUMBER
+    BOOLEAN
+    DECIMAL
+    LIST
+    JSON
+    DATETIME
+    UUID
 }
 
 model UserAttribute {
     id          String    @id @default(uuid())
     key         String    // Nombre del atributo (ej.: "points")
-    value       String    // Valor del atributo (ej.: "100")
+    value       Json?      // Valor del atributo (ej.: "100")
+    defaultValue Json?      // Valor por defecto (ej.: "100")
     isActive    Boolean   @default(true)
+
+    type        AttributeType  // Tipo de dato (ej.: STRING, NUMBER, BOOLEAN, DECIMAL, LIST)
+
+    min         Float?    // Valor mínimo permitido (para números y decimales)
+    max         Float?    // Valor máximo permitido (para números y decimales)
+    minLength   Int?      // Longitud mínima (para strings y listas)
+    maxLength   Int?      // Longitud máxima (para strings y listas)
+    pattern     String?   // Expresión regular para validaciones (opcional)
+    required    Boolean   @default(false) // Indica si es obligatorio
+    maxDate     DateTime?
+    minDate     DateTime?
 
     user        User      @relation(fields: [userId], references: [id])
     userId      String
@@ -113,7 +137,7 @@ model UserAttribute {
 
 model PwdAdmin {
     id           String   @id @default(uuid())
-    passwordHash String   // Hash de la contraseña histórica
+    password     String   // Hash de la contraseña histórica
     expiresAt    DateTime?
     isActive     Boolean  @default(true)
     lastUsedAt   DateTime?
@@ -125,5 +149,5 @@ model PwdAdmin {
     createdAt    DateTime @default(now())
 
     @@index([userId])
-    @@unique([userId, passwordHash])
+    @@unique([userId, password])
 }

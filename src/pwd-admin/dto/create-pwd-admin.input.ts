@@ -1,7 +1,13 @@
-import { InputType, Int, Field } from '@nestjs/graphql';
+import { InputType, Field } from '@nestjs/graphql';
+
+import { IsString, IsUUID, Length } from 'class-validator';
+
 
 @InputType()
 export class CreatePwdAdminInput {
-  @Field(() => Int, { description: 'Example field (placeholder)' })
-  exampleField: number;
+
+    @IsUUID()
+    @Field( () => String )
+    userId: string;
+
 }

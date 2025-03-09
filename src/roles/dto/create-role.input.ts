@@ -1,6 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 
-import { IsOptional, IsString, Length } from 'class-validator';
+import { IsOptional, IsString, IsUUID, Length } from 'class-validator';
 
 
 @InputType()
@@ -18,7 +18,7 @@ export class CreateRoleInput {
     description?: string;
 
     @IsOptional()
-    @IsString()
+    @IsUUID()
     @Field( () => String, { nullable: true })
     userId?: string;
 

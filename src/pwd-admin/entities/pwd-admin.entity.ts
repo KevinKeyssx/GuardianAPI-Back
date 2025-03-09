@@ -1,12 +1,9 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 
 @ObjectType()
 export class PwdAdmin {
     @Field( () => ID )
     id: string;
-
-    @Field(() => String)
-    passwordHash: string;
 
     @Field(() => Date, { nullable: true })
     expiresAt?: Date;
@@ -14,18 +11,22 @@ export class PwdAdmin {
     @Field(() => Boolean)
     isActive: boolean;
 
-    @Field(() => Date, { nullable: true })
-    lastUsedAt?: Date;
-
     @Field(() => Boolean)
     mustChange: boolean;
 
-    // @Field(() => String)
-    // userId: string;
+    @Field( () => Int, {  nullable: true })
+    alertDay: number;
 
-    // @Field(() => User)
-    // user: User;
+    @Field( () => Int, { nullable: true })
+    howOften?: number;
+
+    @Field( () => Date, { nullable: true })
+    changeLastAt?: Date;
 
     @Field(() => Date)
     createdAt: Date;
+
+    @Field(() => Date)
+    updatedAt: Date;
+
 }

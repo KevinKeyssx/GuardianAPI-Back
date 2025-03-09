@@ -1,26 +1,43 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePwdAdminInput } from './dto/create-pwd-admin.input';
-import { UpdatePwdAdminInput } from './dto/update-pwd-admin.input';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+
+import { PrismaClient, PwdAdmin } from '@prisma/client';
+
+import { CreatePwdAdminInput } from '@pwd-admin/dto/create-pwd-admin.input';
+import { UpdatePwdAdminInput } from '@pwd-admin/dto/update-pwd-admin.input';
+
 
 @Injectable()
-export class PwdAdminService {
-  create(createPwdAdminInput: CreatePwdAdminInput) {
-    return 'This action adds a new pwdAdmin';
-  }
+export class PwdAdminService extends PrismaClient implements OnModuleInit {
 
-  findAll() {
-    return `This action returns all pwdAdmin`;
-  }
+    onModuleInit() {
+        this.$connect();
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pwdAdmin`;
-  }
 
-  update(id: number, updatePwdAdminInput: UpdatePwdAdminInput) {
-    return `This action updates a #${id} pwdAdmin`;
-  }
+    async update(
+        updatePwdAdminInput: UpdatePwdAdminInput
+    ): Promise<PwdAdmin> {
+        /** TODO: Hay que agregar al usuario para buscar como usuario o correo y
+        * ? Obtener el id del usuario y modificar por id de usuario y modificar solo la pdw activa
+        */
 
-  remove(id: number) {
-    return `This action removes a #${id} pwdAdmin`;
-  }
+        const pwd = await this.pwdAdmin.findUnique({
+            where: {
+                id          : updatePwdAdminInput.id,
+                isActive    : true
+            }
+        });
+
+        // TODO: Validar que no cambie el iddel usuario
+
+        if ( !pwd ) throw new NotFoundException( `Pwd whit id ${updatePwdAdminInput.id} not found.` );
+
+        return this.pwdAdmin.update({
+            where: {
+                id: updatePwdAdminInput.id
+            },
+            data: updatePwdAdminInput
+        });
+    }
+
 }

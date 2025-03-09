@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { UserAttributeService } from './user-attribute.service';
-import { UserAttributeResolver } from './user-attribute.resolver';
+
+import { UserAttributeService }     from '@user-attribute/user-attribute.service';
+import { UserAttributeResolver }    from '@user-attribute/user-attribute.resolver';
 
 @Module({
-  providers: [UserAttributeResolver, UserAttributeService],
+    providers: [UserAttributeResolver, UserAttributeService],
 })
 export class UserAttributeModule {}

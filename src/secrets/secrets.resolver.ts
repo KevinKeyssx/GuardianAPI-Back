@@ -1,35 +1,47 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { SecretsService } from './secrets.service';
-import { Secret } from './entities/secret.entity';
-import { CreateSecretInput } from './dto/create-secret.input';
-import { UpdateSecretInput } from './dto/update-secret.input';
+import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 
-@Resolver(() => Secret)
+import { SecretsService }           from '@secrets/secrets.service';
+import { SecretEntity }             from '@secrets/entities/secret.entity';
+import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
+import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
+import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
+
+
+@Resolver( () => SecretEntity )
 export class SecretsResolver {
-  constructor(private readonly secretsService: SecretsService) {}
+    constructor(
+        private readonly secretsService: SecretsService
+    ) {}
 
-  @Mutation(() => Secret)
-  createSecret(@Args('createSecretInput') createSecretInput: CreateSecretInput) {
-    return this.secretsService.create(createSecretInput);
-  }
 
-  @Query(() => [Secret], { name: 'secrets' })
-  findAll() {
-    return this.secretsService.findAll();
-  }
+    @Mutation( () => GenerateSecretResponse,{  name: 'generateSecret' } )
+    generateSecret(
+        @Args( 'createSecretInput' ) createSecretInput: CreateSecretInput
+    ) {
+        return this.secretsService.create( createSecretInput );
+    }
 
-  @Query(() => Secret, { name: 'secret' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.secretsService.findOne(id);
-  }
 
-  @Mutation(() => Secret)
-  updateSecret(@Args('updateSecretInput') updateSecretInput: UpdateSecretInput) {
-    return this.secretsService.update(updateSecretInput.id, updateSecretInput);
-  }
+    @Query(() => SecretEntity, { name: 'secret' })
+    findOne(
+        @Args('id', { type: () => ID }) id: string
+    ) {
+        return this.secretsService.findOne( id );
+    }
 
-  @Mutation(() => Secret)
-  removeSecret(@Args('id', { type: () => Int }) id: number) {
-    return this.secretsService.remove(id);
-  }
+
+    @Mutation( () => SecretEntity )
+    updateSecret(
+        @Args( 'updateSecretInput' ) updateSecretInput: UpdateSecretInput
+    ) {
+        return this.secretsService.update( updateSecretInput );
+    }
+
+
+    @Mutation(() => SecretEntity)
+    removeSecret(
+        @Args('id', { type: () => ID }) id: string
+    ) {
+        return this.secretsService.remove( id );
+    }
 }
