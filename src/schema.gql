@@ -103,6 +103,10 @@ type User {
   updatedAt: DateTime!
 }
 
+type ValueAttribute {
+  value: JSON
+}
+
 type GenerateSecretResponse {
   secret: String!
   secretData: SecretEntity!
@@ -113,7 +117,7 @@ type Query {
   user(id: ID!): User!
   roles: [Role!]!
   role(id: ID!): Role!
-  userAttributes: [UserAttribute!]!
+  userAttributes(userId: ID!): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
   secret(id: ID!): SecretEntity!
 }
@@ -128,6 +132,7 @@ type Mutation {
   removeRole(id: ID!): Role!
   createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!
   updateUserAttribute(updateUserAttributeInput: UpdateUserAttributeInput!): UserAttribute!
+  updateValueUserAttribute(updateValueUserAttributeInput: UpdateValueUserAttributeInput!): ValueAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
   updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
@@ -198,6 +203,11 @@ input UpdateUserAttributeInput {
   maxDate: String
   minDate: String
   userId: ID
+  id: ID!
+  value: JSON
+}
+
+input UpdateValueUserAttributeInput {
   id: ID!
   value: JSON
 }
