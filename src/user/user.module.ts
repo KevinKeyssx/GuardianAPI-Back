@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { UserService } from './user.service';
-import { UserResolver } from './user.resolver';
+import { UserService }  from '@user/user.service';
+import { UserResolver } from '@user/user.resolver';
 
 
 @Module({
