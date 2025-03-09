@@ -7,6 +7,7 @@ import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
 import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
+import { ENVS }                     from '../config/envs';
 
 
 @Injectable()
@@ -20,11 +21,10 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
     #generateSecret = () => randomBytes( 32 ).toString( 'hex' );
 
 
-    #deriveSalt = (userId: string): string => {
-        return createHmac( 'sha512', '_FC@CgBdG!*aJJG!dizNJpZw7xoKxKiYgcFThb' )
+    #deriveSalt = ( userId: string ): string => 
+        createHmac( 'sha512', ENVS.SECRET_SALT )
             .update( userId )
             .digest( 'hex' );
-    };
 
 
     #generateSecretHash = (
@@ -42,7 +42,6 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
         userId          : string,
         providedSecret  : string
     ): Promise<boolean> => {
-        // Obtener el secretHash almacenado en la base de datos
         const userSecret = await this.secret.findFirst({
             where: {  
                 apiUserId: userId,
@@ -52,13 +51,9 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
         if ( !userSecret ) throw new NotFoundException( `Secret whit id ${userId} not found.` );
 
-        // Derivar el salt desde el userId y la variable de entorno SECRET_SALT
-        const salt = this.#deriveSalt(userId);
+        const salt                  = this.#deriveSalt( userId );
+        const hashedProvidedSecret  = createHmac( 'sha512', salt ).update( providedSecret ).digest( 'hex' );
 
-        // Generar el hash del secreto proporcionado por el usuario con el salt
-        const hashedProvidedSecret = createHmac('sha512', salt).update(providedSecret).digest('hex');
-
-        // Comparar el hash del secreto proporcionado con el hash almacenado
         return hashedProvidedSecret === userSecret.secret;
     };
 
