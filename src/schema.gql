@@ -123,7 +123,6 @@ type Query {
 }
 
 type Mutation {
-  createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
   createRole(createRoleInput: CreateRoleInput!): Role!
@@ -138,16 +137,6 @@ type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
   updateSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
   removeSecret(id: ID!): SecretEntity!
-}
-
-input CreateUserInput {
-  email: String!
-  password: String!
-  nickname: String
-  name: String
-  birthdate: DateTime
-  avatar: String
-  apiUserId: String
 }
 
 input UpdateUserInput {

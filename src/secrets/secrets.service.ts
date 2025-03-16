@@ -21,10 +21,16 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
     #generateSecret = () => randomBytes( 32 ).toString( 'hex' );
 
 
-    #deriveSalt = ( userId: string ): string => 
-        createHmac( 'sha512', ENVS.SECRET_SALT )
-            .update( userId )
-            .digest( 'hex' );
+    #createHmac = (
+        salt    : string,
+        secret  : string,
+        hash    : string = 'sha512'
+    ): string => createHmac( hash, salt )
+        .update( secret )
+        .digest( 'hex' );
+
+
+    #deriveSalt = ( userId: string ): string => this.#createHmac( ENVS.SECRET_SALT, userId );
 
 
     #generateSecretHash = (
@@ -32,9 +38,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
         secret: string
     ): string => {
         const salt = this.#deriveSalt( userId );
-        return createHmac( 'sha512', salt )
-            .update( secret )
-            .digest( 'hex' );
+        return this.#createHmac( salt, secret );
     };
 
 
@@ -49,12 +53,11 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
             },
         });
 
-        if ( !userSecret ) throw new NotFoundException( `Secret whit id ${userId} not found.` );
+        if ( !userSecret ) throw new NotFoundException( `Secret with id ${userId} not found.` );
 
-        const salt                  = this.#deriveSalt( userId );
-        const hashedProvidedSecret  = createHmac( 'sha512', salt ).update( providedSecret ).digest( 'hex' );
+        const salt = this.#deriveSalt( userId );
 
-        return hashedProvidedSecret === userSecret.secret;
+        return this.#createHmac( salt, providedSecret ) === userSecret.secret;
     };
 
 
