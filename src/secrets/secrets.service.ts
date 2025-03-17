@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 
 import { randomBytes, createHmac }  from 'crypto';
 import { PrismaClient, Secret }     from '@prisma/client';
@@ -42,7 +42,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
     };
 
 
-    #validateSecret = async (
+    validateSecret = async (
         userId          : string,
         providedSecret  : string
     ): Promise<boolean> => {
@@ -53,17 +53,13 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
             },
         });
 
-        if ( !userSecret ) throw new NotFoundException( `Secret with id ${userId} not found.` );
+        if ( !userSecret ) throw new UnauthorizedException( `Invalid secretddddd.` );
 
         const salt = this.#deriveSalt( userId );
 
         return this.#createHmac( salt, providedSecret ) === userSecret.secret;
     };
 
-
-    // TODO: CREAR UN PIPE CUSTOM
-    // QUE SE ENCARGUE VALIDAR QUE EL USUARIO ES HIJO DE UNA CUENTA API
-    // Y QUE VALIDE EL SECRET
 
     async create(
         createSecretInput: CreateSecretInput

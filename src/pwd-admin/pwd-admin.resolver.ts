@@ -1,10 +1,13 @@
+import { UseGuards }                from '@nestjs/common';
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 
+import { SecretAuthGuard }      from '@auth/guards/jwt-auth.guard';
 import { PwdAdminService }      from '@pwd-admin/pwd-admin.service';
 import { PwdAdmin }             from '@pwd-admin/entities/pwd-admin.entity';
 import { UpdatePwdAdminInput }  from '@pwd-admin/dto/update-pwd-admin.input';
 
 
+@UseGuards( SecretAuthGuard( true ))
 @Resolver( () => PwdAdmin )
 export class PwdAdminResolver {
     constructor(

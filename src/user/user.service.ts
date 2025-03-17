@@ -50,25 +50,6 @@ export class UserService extends PrismaClient implements OnModuleInit {
     }
 
 
-    // async create( createUserInput: CreateUserInput ): Promise<User> {
-    //     await this.#valid( createUserInput );
-
-    //     const { password, ...user } = createUserInput;
-    //     const newUser = await this.user.create({
-    //         data: user
-    //     });
-
-    //     await this.pwdAdmin.create({
-    //         data: {
-    //             password,
-    //             userId: newUser.id
-    //         }
-    //     });
-
-    //     return newUser;
-    // }
-
-
     async findAll(): Promise<User[]> {
         return await this.user.findMany({
             where: this.#where()

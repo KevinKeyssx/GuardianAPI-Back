@@ -1,5 +1,7 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { UseGuards }                            from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
+import { SecretAuthGuard }          from '@auth/guards/jwt-auth.guard';
 import { SecretsService }           from '@secrets/secrets.service';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
 import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
@@ -7,6 +9,7 @@ import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
 
 
+@UseGuards( SecretAuthGuard( false ))
 @Resolver( () => SecretEntity )
 export class SecretsResolver {
     constructor(

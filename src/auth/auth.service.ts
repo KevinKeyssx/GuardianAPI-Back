@@ -5,17 +5,23 @@ import {
     Logger,
     OnModuleInit,
     UnauthorizedException
-} from '@nestjs/common';
+}                       from '@nestjs/common';
+import { JwtService }   from '@nestjs/jwt';
 
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt      from 'bcryptjs';
 
-import { SignUpDto } from './dto/singup.dto';
-import { AuthResponse } from './types/auth-response.type';
+import { SignUpDto }    from '@auth/dto/singup.dto';
+import { AuthResponse } from '@auth/types/auth-response.type';
+import { User }         from '@user/entities/user.entity';
 
 
 @Injectable()
 export class AuthService extends PrismaClient implements OnModuleInit {
+
+    constructor( private readonly jwtService: JwtService ) {
+        super();
+    }
 
     #logger = new Logger( AuthService.name );
 
@@ -23,6 +29,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 		this.$connect();
         this.#logger.log( '***Connected to DB AUTH***' );
 	}
+
+    #getJwtToken( userId: string ) {
+        return this.jwtService.sign({ id: userId });
+    }
 
     #handleErrors( error:any ): never {
         if (  error.code === 'P2002' ) {
@@ -82,15 +92,15 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             await this.pwdAdmin.create({
                 data: {
                     password: bcrypt.hashSync( password, 10 ),
-                    userId: newUser.id
+                    userId  : newUser.id
                 }
             });
 
             return {
-                token: 'ewrdsfsd123wdsfwerds1123ssw2#¡$[s',
-                user: newUser
+                token   : this.#getJwtToken( newUser.id ),
+                user    : newUser
             } as AuthResponse;
-        } catch (error) {
+        } catch ( error ) {
             this.#handleErrors( error );
         }
     }
@@ -118,9 +128,33 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             throw new UnauthorizedException( 'Invalid credentials.' );
 
         return {
-            token: 'asdfer123wwss+¡##¡122qwedd',
+            token: this.#getJwtToken( user.id ),
             user: user
         } as AuthResponse;
+    }
+
+
+    async validate( userId: string ) : Promise<User> {
+        const user = await this.user.findUnique( {
+            where: { id: userId },
+            include: {
+                userRoles: {
+                    include: {
+                        role: true,
+                    },
+                },
+            },
+        });
+
+        if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
+
+        const transformUser = {
+            ...user,
+            roles: user.userRoles.map( userRole => userRole.role ),
+            userRoles: undefined
+        }
+
+        return transformUser as User;
     }
 
 }

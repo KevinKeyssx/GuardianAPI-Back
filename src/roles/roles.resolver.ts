@@ -1,12 +1,15 @@
+import { UseGuards } from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 
+import { SecretAuthGuard }  from '@auth/guards/jwt-auth.guard';
 import { RolesService }     from '@roles/roles.service';
 import { Role }             from '@roles/entities/role.entity';
 import { CreateRoleInput }  from '@roles/dto/create-role.input';
 import { UpdateRoleInput }  from '@roles/dto/update-role.input';
-import { UserRole } from './entities/user-role.entity';
+import { UserRole }         from '@roles/entities/user-role.entity';
 
 
+@UseGuards( SecretAuthGuard( false ))
 @Resolver( () => Role )
 export class RolesResolver {
 

@@ -2,11 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Role {
+type SecretEntity {
   id: ID!
-  name: String!
-  description: String
-  userId: String
+  expiresAt: DateTime
+  isActive: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -16,10 +15,16 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type SecretEntity {
+type GenerateSecretResponse {
+  secret: String!
+  secretData: SecretEntity!
+}
+
+type Role {
   id: ID!
-  expiresAt: DateTime
-  isActive: Boolean!
+  name: String!
+  description: String
+  userId: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -107,24 +112,22 @@ type ValueAttribute {
   value: JSON
 }
 
-type GenerateSecretResponse {
-  secret: String!
-  secretData: SecretEntity!
-}
-
 type Query {
   users: [User!]!
   user(id: ID!): User!
+  secret(id: ID!): SecretEntity!
   roles: [Role!]!
   role(id: ID!): Role!
   userAttributes(userId: ID!): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
-  secret(id: ID!): SecretEntity!
 }
 
 type Mutation {
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
+  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
+  updateSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
+  removeSecret(id: ID!): SecretEntity!
   createRole(createRoleInput: CreateRoleInput!): Role!
   assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
@@ -134,9 +137,6 @@ type Mutation {
   updateValueUserAttribute(updateValueUserAttributeInput: UpdateValueUserAttributeInput!): ValueAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
   updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
-  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
-  updateSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
-  removeSecret(id: ID!): SecretEntity!
 }
 
 input UpdateUserInput {
@@ -147,6 +147,16 @@ input UpdateUserInput {
   birthdate: DateTime
   avatar: String
   apiUserId: String
+}
+
+input CreateSecretInput {
+  userId: ID!
+  expiresAt: DateTime
+}
+
+input UpdateSecretInput {
+  id: ID!
+  expiresAt: DateTime!
 }
 
 input CreateRoleInput {
@@ -211,14 +221,4 @@ input UpdatePwdAdminInput {
   expiresAt: DateTime
   isActive: Boolean
   mustChange: Boolean
-}
-
-input CreateSecretInput {
-  userId: ID!
-  expiresAt: DateTime
-}
-
-input UpdateSecretInput {
-  id: ID!
-  expiresAt: DateTime!
 }

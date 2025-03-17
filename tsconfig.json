@@ -17,6 +17,7 @@
 			"@roles/*"			: ["src/roles/*"],
 			"@secrets/*"        : ["src/secrets/*"],
 			"@pwd-admin/*"		: ["src/pwd-admin/*"],
+            "@config/*"         : ["src/config/*"],
 		},
 		"incremental": true,
 		"skipLibCheck": true,
