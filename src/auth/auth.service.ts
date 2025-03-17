@@ -136,7 +136,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
     async validate( userId: string ) : Promise<User> {
         const user = await this.user.findUnique( {
-            where: { id: userId },
+            where: {
+                id      : userId,
+                isActive: true
+            },
             include: {
                 userRoles: {
                     include: {

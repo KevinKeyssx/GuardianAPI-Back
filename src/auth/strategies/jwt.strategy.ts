@@ -43,17 +43,12 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
         const userId = payload.id;
         const access = req['access'];
 
-        const user = await this.authService.validate( userId );
+        const user  = await this.authService.validate( userId );
+        const role  = user.roles?.find( role => role.name === ENVS.ROLE_SECRET );
 
-        if ( !user.isActive ) {
-            throw new UnauthorizedException( 'User is inactive, talk to the admin' );
-        }
+        if ( role && !user.apiUserId ) return user;
 
-        const isPowerRole = user.roles?.find( role => role.name === ENVS.ROLE_SECRET );
-
-        if ( isPowerRole && !user.apiUserId ) return user;
-
-        if ( !access ) throw new ForbiddenException ( `Permission denied.` );
+        if ( !access || !secret ) throw new ForbiddenException ( `Permission denied.` );
 
         const secretValid = await this.secretsService.validateSecret( user.apiUserId!, secret );
 

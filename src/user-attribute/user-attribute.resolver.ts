@@ -1,5 +1,7 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { UseGuards }                            from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
+import { SecretAuthGuard }                  from '@auth/guards/jwt-auth.guard';
 import { UserAttributeService }             from '@user-attribute/user-attribute.service';
 import { UserAttribute }                    from '@user-attribute/entities/user-attribute.entity';
 import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
@@ -15,6 +17,7 @@ export class UserAttributeResolver {
     ) {}
 
 
+    @UseGuards( SecretAuthGuard( false ))
     @Mutation( () => UserAttribute )
     createUserAttribute(
         @Args( 'createUserAttributeInput' ) createUserAttributeInput: CreateUserAttributeInput
@@ -23,6 +26,7 @@ export class UserAttributeResolver {
     }
 
 
+    @UseGuards( SecretAuthGuard( false ))
     @Query( () => [UserAttribute], { name: 'userAttributes' })
     findAll(
         @Args('userId', { type: () => ID }) userId: string
@@ -31,6 +35,7 @@ export class UserAttributeResolver {
     }
 
 
+    @UseGuards( SecretAuthGuard( false ))
     @Query( () => UserAttribute, { name: 'userAttribute' })
     findOne(
         @Args('id', { type: () => ID }) id: string
@@ -39,6 +44,7 @@ export class UserAttributeResolver {
     }
 
 
+    @UseGuards( SecretAuthGuard( false ))
     @Mutation( () => UserAttribute )
     updateUserAttribute(
         @Args( 'updateUserAttributeInput' ) updateUserAttributeInput: UpdateUserAttributeInput
@@ -47,6 +53,7 @@ export class UserAttributeResolver {
     }
 
 
+    @UseGuards( SecretAuthGuard( true ))
     @Mutation( () => ValueAttribute, { name: 'updateValueUserAttribute' })
     updateValueUserAttribute(
         @Args( 'updateValueUserAttributeInput' ) updateUserAttributeInput: UpdateValueUserAttributeInput
@@ -55,6 +62,7 @@ export class UserAttributeResolver {
     }
 
 
+    @UseGuards( SecretAuthGuard( false ))
     @Mutation( () => UserAttribute )
     removeUserAttribute(
         @Args( 'id', { type: () => ID }) id: string

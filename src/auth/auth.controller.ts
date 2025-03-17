@@ -1,8 +1,10 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
-import { AuthService } from './auth.service';
-import { SignUpDto } from './dto/singup.dto';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthService }  from '@auth/auth.service';
+import { SignUpDto }    from '@auth/dto/singup.dto';
+import { AuthGuard }    from '@auth/guards/auth.guard';
+import { CurrentUser }  from '@auth/decorators/current-user.decorator';
+import { User }         from '@user/entities/user.entity';
 
 
 @Controller( 'auth' )
@@ -28,9 +30,12 @@ export class AuthController {
     }
 
 
-    @Get( 'validate' )
+    @Get( 'revalidate' )
     @UseGuards( AuthGuard )
-    revalidateToken() {
-        return '';
+    revalidateToken(
+        @CurrentUser() user: User
+    ) {
+        console.log('🚀 ~ file: auth.controller.ts:37 ~ user:', user)
+        return user;
     }
 }
