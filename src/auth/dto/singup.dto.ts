@@ -3,6 +3,7 @@ import {
     IsNotEmpty,
     IsOptional,
     IsString,
+    IsUUID,
     Length
 } from "class-validator";
 
@@ -23,5 +24,9 @@ export class SignUpDto {
     @IsString()
     @Length( 3, 30 )
     role?: string;
+
+    @IsOptional()
+    @IsUUID()
+    apiUserId?: string;
 
 }

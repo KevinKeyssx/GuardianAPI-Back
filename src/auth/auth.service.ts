@@ -53,7 +53,12 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
     async signUp( signUpDto: SignUpDto ): Promise<AuthResponse> {
         let roleId: string | null = null;
-        const { password, role, ...user } = signUpDto;
+
+        const { password, role, apiUserId, ...email } = signUpDto;
+
+        if ( apiUserId && role ) {
+            throw new BadRequestException( 'apiUserId and role cannot be used together.' );
+        }
 
         if ( role ) {
             const existRole = await this.role.findUnique({
@@ -71,22 +76,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         try {
             const newUser = await this.user.create({
                 data: {
-                    ...user,
-                    ...( role && roleId ) && {
-                        userRoles: {
-                            create: {
-                                roleId
-                            },
-                        },
-                    }
-                },
-                // include: {
-                //     userRoles: {
-                //         include: {
-                //             role: true,
-                //         },
-                //     },
-                // },
+                    ...email,
+                    apiUserId,
+                    ...( role && roleId ) && { userRoles: { create: { roleId }}},
+                }
             });
 
             await this.pwdAdmin.create({
@@ -96,9 +89,11 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 }
             });
 
+            const { apiUserId: api, ...rest } = newUser;
+
             return {
                 token   : this.#getJwtToken( newUser.id ),
-                user    : newUser
+                user    : rest
             } as AuthResponse;
         } catch ( error ) {
             this.#handleErrors( error );
@@ -127,9 +122,11 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         if ( !bcrypt.compareSync( password, pwdAdmin.password ))
             throw new UnauthorizedException( 'Invalid credentials.' );
 
+        const { apiUserId, ...rest } = user;
+
         return {
-            token: this.#getJwtToken( user.id ),
-            user: user
+            token   : this.#getJwtToken( user.id ),
+            user    : rest
         } as AuthResponse;
     }
 
@@ -140,24 +137,16 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 id      : userId,
                 isActive: true
             },
-            include: {
-                userRoles: {
-                    include: {
-                        role: true,
-                    },
-                },
-            },
+            include: { userRoles: { include: { role: true }}}
         });
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
 
-        const transformUser = {
+        return {
             ...user,
-            roles: user.userRoles.map( userRole => userRole.role ),
-            userRoles: undefined
-        }
-
-        return transformUser as User;
+            roles       : user.userRoles.map( userRole => userRole.role ),
+            userRoles   : undefined
+        } as User;
     }
 
 }

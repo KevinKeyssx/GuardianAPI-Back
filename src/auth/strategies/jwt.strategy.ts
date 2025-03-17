@@ -30,25 +30,23 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
 
                 return token;
             },
-            secretOrKey: ENVS.JWT_SECRET,
-            passReqToCallback: true
+            secretOrKey         : ENVS.JWT_SECRET,
+            passReqToCallback   : true
         });
-
-        this.authService.$connect();
-
     }
 
-    async validate( req: Request, payload: JwtPayload ): Promise<User> {
-        const secret = req['secret'];
-        const userId = payload.id;
-        const access = req['access'];
 
-        const user  = await this.authService.validate( userId );
-        const role  = user.roles?.find( role => role.name === ENVS.ROLE_SECRET );
+    async validate( req: Request, payload: JwtPayload ): Promise<User> {
+        const secret    = req['secret'];
+        const userId    = payload.id;
+        const access    = req['access'];
+        const user      = await this.authService.validate( userId );
+        const role      = user.roles?.find( role => role.name === ENVS.ROLE_SECRET );
 
         if ( role && !user.apiUserId ) return user;
 
-        if ( !access || !secret ) throw new ForbiddenException ( `Permission denied.` );
+        if ( !access ) throw new ForbiddenException ( `Permission denied.` );
+        if ( !secret ) throw new UnauthorizedException( 'Invalid secret.' );
 
         const secretValid = await this.secretsService.validateSecret( user.apiUserId!, secret );
 
