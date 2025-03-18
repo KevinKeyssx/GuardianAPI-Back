@@ -41,10 +41,10 @@ export class UserAttribute {
     @Field( () => Boolean, { nullable: true })
     required: boolean = false;
 
-    @Field( () => String, {  nullable: true })
-    maxDate?: string;
+    @Field( () => Date, {  nullable: true })
+    maxDate?: Date;
 
-    @Field( () => String, {  nullable: true })
-    minDate?: string;
+    @Field( () => Date, {  nullable: true })
+    minDate?: Date;
 
 }

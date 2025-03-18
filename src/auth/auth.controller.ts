@@ -35,7 +35,6 @@ export class AuthController {
     revalidateToken(
         @CurrentUser() user: User
     ) {
-        console.log('🚀 ~ file: auth.controller.ts:37 ~ user:', user)
-        return user;
+        return this.authService.revalidateToken( user );
     }
 }

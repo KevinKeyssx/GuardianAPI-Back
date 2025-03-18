@@ -149,4 +149,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         } as User;
     }
 
+
+    revalidateToken = async ( user: User ) : Promise<AuthResponse> => ({
+        token: this.#getJwtToken( user.id ),
+        user
+    }) as AuthResponse;
+
 }

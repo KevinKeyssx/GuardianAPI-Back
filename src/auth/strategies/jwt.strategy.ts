@@ -23,10 +23,9 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
     ) {
         super({
             jwtFromRequest: (req) => {
-                const secretHeader = req.headers['secret'];
                 const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
                 req.token = token;
-                req.secret = secretHeader;
+                req.secret = req.headers['secret'];
 
                 return token;
             },
@@ -46,7 +45,7 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
         if ( role && !user.apiUserId ) return user;
 
         if ( !access ) throw new ForbiddenException ( `Permission denied.` );
-        if ( !secret ) throw new UnauthorizedException( 'Invalid secret.' );
+        if ( !secret ) throw new UnauthorizedException( 'Secret not provided.' );
 
         const secretValid = await this.secretsService.validateSecret( user.apiUserId!, secret );
 

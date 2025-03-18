@@ -36,8 +36,8 @@ type UserAttribute {
   maxLength: Float
   pattern: String
   required: Boolean
-  maxDate: String
-  minDate: String
+  maxDate: DateTime
+  minDate: DateTime
 }
 
 """
@@ -141,7 +141,6 @@ type Mutation {
 
 input UpdateUserInput {
   email: String
-  password: String
   nickname: String
   name: String
   birthdate: DateTime

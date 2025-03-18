@@ -19,11 +19,6 @@ export class CreateUserInput {
     @Length( 1, 80 )
     email: string;
 
-    @Field( () => String )
-    @IsString()
-    @Length( 3, 30 )
-    password: string;
-
     @Field({ nullable: true })
     @IsOptional()
     @IsString()

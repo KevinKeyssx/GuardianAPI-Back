@@ -1,9 +1,17 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    Logger,
+    NotFoundException,
+    OnModuleInit
+} from '@nestjs/common';
 
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-import { CreateUserInput } from '@user/dto/create-user.input';
-import { UpdateUserInput } from '@user/dto/update-user.input';
+import { CreateUserInput }  from '@user/dto/create-user.input';
+import { UpdateUserInput }  from '@user/dto/update-user.input';
+import { User }             from '@user/entities/user.entity';
 
 
 @Injectable()
@@ -19,7 +27,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
 
     #where = () => ({
         isDeleted   : false,
-        isActive    : true
+        isActive    : true,
     });
 
 
@@ -50,55 +58,61 @@ export class UserService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async findAll(): Promise<User[]> {
+    async findAll( currentUser: User ): Promise<User[]> {
         return await this.user.findMany({
-            where: this.#where()
-        });
+            where: {
+                ...this.#where(),
+                apiUserId: currentUser.id
+            }
+        }) as User[];
     }
 
 
-    async findOne( id: string ): Promise<User> {
+    async findOne( currentUser: User, id: string ): Promise<User> {
+        if ( currentUser.id !== id && currentUser.apiUserId ) {
+            throw new ForbiddenException( 'You are not allowed to access this user.' );
+        }
+
         const user = await this.user.findUnique({
             where: {
                 id,
                 ...this.#where()
+            },
+            include: {
+                attributes: true
             }
         });
 
+        if ( user?.apiUserId !== currentUser.id && !currentUser.apiUserId ) {
+            throw new ForbiddenException( 'You are not allowed to access this user.' );
+        }
+
         if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
 
-        return user;
+        return user as User;
     }
 
 
-    async update( updateUserInput: UpdateUserInput ) {
-        const user = await this.findOne( updateUserInput.id );
-
-        if ( user.isDeleted ) throw new NotFoundException( `User whit id ${updateUserInput.id} not found.` );
-        if ( !user.isActive ) throw new NotFoundException( `User whit id ${updateUserInput.id} is not active.` );
-
-        const { password, ...restUser } = updateUserInput;
-
-        if ( password ) throw new BadRequestException( 'Password cannot be updated.' );
-
+    async update( currentUser: User, updateUserInput: UpdateUserInput ) {
+        await this.findOne( currentUser, updateUserInput.id );
         await this.#valid( updateUserInput );
 
         return this.user.update({
             where: {
                 id: updateUserInput.id
             },
-            data: restUser
+            data: updateUserInput
         });
     }
 
 
-    async remove( id: string ): Promise<User> {
-        await this.findOne( id );
+    async remove( currentUser: User, id: string ): Promise<User> {
+        await this.findOne( currentUser, id );
 
-        return this.user.update({
+        return await this.user.update({
             where   : { id },
             data    : { isDeleted: true }
-        })
+        }) as User;
     }
 
 }
