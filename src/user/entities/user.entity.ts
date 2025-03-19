@@ -25,6 +25,9 @@ export class User {
     @Field(() => Date, { nullable: true })
     birthdate?: Date;
 
+    @Field(() => String, { nullable: true })
+    phone?: string;
+
     @Field(() => Boolean)
     isDeleted: boolean;
 
