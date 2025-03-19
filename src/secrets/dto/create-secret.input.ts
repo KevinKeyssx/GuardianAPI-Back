@@ -1,11 +1,12 @@
 import { InputType, Field } from '@nestjs/graphql';
 
-import { IsDate } from 'class-validator';
+import { IsDate, IsOptional } from 'class-validator';
 
 @InputType()
 export class CreateSecretInput {
 
     @IsDate()
+    @IsOptional()
     @Field( () => Date, { nullable: true } )
     expiresAt?: Date;
 

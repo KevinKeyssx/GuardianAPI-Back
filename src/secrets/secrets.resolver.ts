@@ -35,10 +35,11 @@ export class SecretsResolver {
     }
 
 
-    @Mutation(() => SecretEntity)
-    removeSecret(
+    @Mutation(() => Boolean, { name: 'removeSecret' })
+    async removeSecret(
         @CurrentUser() user: User,
-    ) {
-        return this.secretsService.remove( user );
+    ): Promise<boolean> {
+        const result = await this.secretsService.remove(user);
+        return result.count > 0; 
     }
 }

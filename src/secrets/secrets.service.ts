@@ -108,14 +108,13 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
     async remove( currentUser: User ): Promise<Prisma.BatchPayload> {
         try {
-            return this.secret.deleteMany({
+            return await this.secret.deleteMany({
                 where: {
-                    apiUserId: currentUser.id,
-                    isActive: true,
+                    apiUserId: currentUser.id
                 }
             });
         } catch (error) {
-            throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
+            throw new NotFoundException( `Secret to user ${currentUser.id} not found.` );
         }
     }
 }
