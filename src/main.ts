@@ -2,7 +2,8 @@ import { Logger, ValidationPipe }   from '@nestjs/common';
 import { NestFactory }              from '@nestjs/core';
 
 import { AppModule }    from './app.module';
-import { ENVS }         from './config/envs';
+import { ENVS }         from '@config/envs';
+import { AuthModule }   from '@auth/auth.module';
 
 
 ( async () => {
@@ -21,6 +22,8 @@ import { ENVS }         from './config/envs';
         methods         : [ "GET", "POST", "PUT", "DELETE" ],
         allowedHeaders  : [ "Content-Type", "Authorization" ],
     });
+
+    AuthModule.setupSwagger( app );
 
     await app.listen( ENVS.PORT );
     logger.log( `GuardianAPI listening on port ${ ENVS.PORT }` );

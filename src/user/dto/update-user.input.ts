@@ -1,6 +1,6 @@
 import { InputType, PartialType } from '@nestjs/graphql';
 
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 import { CreateUserInput } from '@user/dto/create-user.input';
 
@@ -10,14 +10,6 @@ export class UpdateUserInput extends PartialType( CreateUserInput ) {
 
     @IsUUID()
     id: string;
-
-    @IsBoolean()
-    @IsOptional()
-    isActive?: boolean;
-
-    @IsOptional()
-    @IsBoolean()
-    isDeleted?: boolean;
 
     @IsOptional()
     @IsString()

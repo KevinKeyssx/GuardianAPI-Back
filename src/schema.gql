@@ -113,9 +113,9 @@ type ValueAttribute {
 }
 
 type Query {
+  secret: SecretEntity!
   users: [User!]!
   user(id: ID!): User!
-  secret(id: ID!): SecretEntity!
   roles: [Role!]!
   role(id: ID!): Role!
   userAttributes(userId: ID!): [UserAttribute!]!
@@ -123,11 +123,10 @@ type Query {
 }
 
 type Mutation {
+  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
+  removeSecret: SecretEntity!
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
-  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
-  updateSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
-  removeSecret(id: ID!): SecretEntity!
   createRole(createRoleInput: CreateRoleInput!): Role!
   assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
@@ -139,23 +138,16 @@ type Mutation {
   updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
 }
 
+input CreateSecretInput {
+  expiresAt: DateTime
+}
+
 input UpdateUserInput {
   email: String
   nickname: String
   name: String
   birthdate: DateTime
   avatar: String
-  apiUserId: String
-}
-
-input CreateSecretInput {
-  userId: ID!
-  expiresAt: DateTime
-}
-
-input UpdateSecretInput {
-  id: ID!
-  expiresAt: DateTime!
 }
 
 input CreateRoleInput {

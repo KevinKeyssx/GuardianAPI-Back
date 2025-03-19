@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 
-import { randomBytes, createHmac }  from 'crypto';
-import { PrismaClient, Secret }     from '@prisma/client';
+import { randomBytes, createHmac }      from 'crypto';
+import { Prisma, PrismaClient, Secret } from '@prisma/client';
 
 import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
-import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
-import { ENVS }                     from '../config/envs';
+import { User }                     from '@user/entities/user.entity';
+import { ENVS }                     from '@config/envs';
 
 
 @Injectable()
@@ -62,39 +62,21 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
 
     async create(
-        createSecretInput: CreateSecretInput
+        currentUser         : User,
+        createSecretInput   : CreateSecretInput
     ): Promise<GenerateSecretResponse> {
-        // const secrets = await this.secret.findMany({
-        //     where: {
-        //         apiUserId: createSecretInput.userId,
-        //     }
-        // });
-
-        // if ( secrets.length > 0 ) {
-        //     const secret = secrets.find( secret => secret.isActive );
-
-        //     await this.secret.update({
-        //         where: {
-        //             id: secret!.id
-        //         },
-        //         data: {
-        //             isActive: false
-        //         }
-        //     });
-        // }
-
         await this.secret.deleteMany({
             where: {
-                apiUserId: createSecretInput.userId,
+                apiUserId: currentUser.id,
             }
         });
 
         const secret        = this.#generateSecret();
-        const secretHash    = this.#generateSecretHash(createSecretInput.userId, secret);
+        const secretHash    = this.#generateSecretHash(currentUser.id, secret);
         const createdSecret = await this.secret.create({
             data: {
                 expiresAt   : createSecretInput.expiresAt,
-                apiUserId   : createSecretInput.userId,
+                apiUserId   : currentUser.id,
                 secret      : secretHash,
             }
         });
@@ -111,54 +93,29 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async findOne( userId: string ): Promise<Secret> {
+    async findOne( currentUser: User ): Promise<Secret> {
         const secret = await this.secret.findFirst({
             where: {
-                apiUserId: userId
+                apiUserId: currentUser.id
             }
         });
 
-        if ( !secret ) throw new NotFoundException( `Secret whit id ${userId} not found.` );
+        if ( !secret ) throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
 
         return secret;
     }
 
 
-    async update(
-        updateSecretInput: UpdateSecretInput
-    ): Promise<Secret> {
-        const secret = await this.secret.findUnique({
-            where: {
-                id: updateSecretInput.id
-            }
-        });
-
-        if ( !secret ) throw new NotFoundException( `Secret whit id ${updateSecretInput.id} not found.` );
-
-        return this.secret.update({
-            where: {
-                id: updateSecretInput.id
-            },
-            data: {
-                expiresAt: updateSecretInput.expiresAt,
-            }
-        });
-    }
-
-
-    async remove( id: string ): Promise<Secret> {
-        const secret = await this.secret.findUnique({
-            where: {
-                id
-            }
-        });
-
-        if ( !secret ) throw new NotFoundException( `Secret whit id ${id} not found.` );
-
-        return this.secret.delete({
-            where: {
-                id
-            }
-        });
+    async remove( currentUser: User ): Promise<Prisma.BatchPayload> {
+        try {
+            return this.secret.deleteMany({
+                where: {
+                    apiUserId: currentUser.id,
+                    isActive: true,
+                }
+            });
+        } catch (error) {
+            throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
+        }
     }
 }

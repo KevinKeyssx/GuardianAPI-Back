@@ -42,9 +42,4 @@ export class CreateUserInput {
     @IsString()
     avatar?: string;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsUUID()
-    apiUserId?: string;
-
 }

@@ -6,7 +6,7 @@ export class AppController {
 
     @Get()
     getHello(): string {
-        return 'Guardian API';
+        return 'Welcome to Guardian API';
     }
 
 }

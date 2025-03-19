@@ -1,6 +1,8 @@
-import { Module }           from '@nestjs/common';
-import { JwtModule }        from '@nestjs/jwt';
-import { PassportModule }   from '@nestjs/passport';
+import { Module }                           from '@nestjs/common';
+import { JwtModule }                        from '@nestjs/jwt';
+import { PassportModule }                   from '@nestjs/passport';
+import { DocumentBuilder, SwaggerModule }   from '@nestjs/swagger';
+import { INestApplication }                 from '@nestjs/common/interfaces';
 
 import { AuthService }      from '@auth/auth.service';
 import { AuthController }   from '@auth/auth.controller';
@@ -25,4 +27,16 @@ import { SecretsModule }    from '@secrets/secrets.module';
         SecretsModule
     ]
 })
-export class AuthModule {}
+export class AuthModule {
+    static setupSwagger( app: INestApplication ) {
+        const config = new DocumentBuilder()
+            .setTitle( 'GuardianAPI Auth' )
+            .setDescription( 'GuardianAPI Documentation' )
+            .setVersion( '1.0' )
+            .addBearerAuth()
+            .build();
+
+        const document = SwaggerModule.createDocument( app, config );
+        SwaggerModule.setup( 'docs', app, document );
+    }
+}

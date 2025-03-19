@@ -1,4 +1,4 @@
-import { UseGuards }                            from '@nestjs/common';
+import { ParseUUIDPipe, UseGuards }                            from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }  from '@auth/guards/jwt-auth.guard';
@@ -30,7 +30,7 @@ export class UserResolver {
     @Query(() => User, { name: 'user' })
     findOne(
         @CurrentUser() user: User,
-        @Args( 'id', { type: () => ID }) id: string
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string
     ) {
         return this.userService.findOne( user, id );
     }
@@ -50,7 +50,7 @@ export class UserResolver {
     @Mutation( () => User )
     removeUser(
         @CurrentUser() user: User,
-        @Args( 'id', { type: () => ID }) id: string
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string
     ) {
         return this.userService.remove( user, id );
     }
