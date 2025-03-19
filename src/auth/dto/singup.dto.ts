@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import {
     IsEmail,
     IsNotEmpty,
@@ -10,21 +11,52 @@ import {
 
 export class SignUpDto {
 
+    @ApiProperty({
+        example     : 'john_doe@gmail.com',
+        description : 'The email of the user',
+        minLength   : 10,
+        maxLength   : 100,
+    })
     @IsNotEmpty()
     @Length( 10, 100 )
     @IsEmail()
     email: string;
 
+    @ApiProperty({
+        example     : '12345678AA!*',
+        description : 'The password of the user',
+        minLength   : 8,
+        maxLength   : 100,
+    })
     @IsString()
     @IsNotEmpty()
     @Length( 8, 100 )
     password: string;
 
+    @ApiProperty({
+        example     : 'admin',
+        description : 'The role of the user',
+        minLength   : 3,
+        maxLength   : 30,
+    })
+
+    @ApiProperty({
+        example     : 'admin',
+        description : 'The role of the user',
+        minLength   : 3,
+        maxLength   : 30,
+        required    : false
+    })
     @IsOptional()
     @IsString()
     @Length( 3, 30 )
     role?: string;
 
+    @ApiProperty({
+        example     : '12345678-1234-1234-1234-123456789012',
+        description : 'The apiUserId of the user',
+        required    : false
+    })
     @IsOptional()
     @IsUUID()
     apiUserId?: string;
