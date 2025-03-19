@@ -9,7 +9,6 @@ import {
 
 import { PrismaClient } from '@prisma/client';
 
-import { CreateUserInput }  from '@user/dto/create-user.input';
 import { UpdateUserInput }  from '@user/dto/update-user.input';
 import { User }             from '@user/entities/user.entity';
 
@@ -31,7 +30,24 @@ export class UserService extends PrismaClient implements OnModuleInit {
     });
 
 
-    async #valid( userInput: CreateUserInput | UpdateUserInput ) {
+    #guardianIncludes = () => ({
+        attributes  : true,
+        userRoles   : true,
+        secrets     : true,
+        roles       : true,
+        apiUser     : true,
+        pwdAdmins   : true,
+        users       : true,
+    });
+
+    #apiUserIncludes = () => ({
+        attributes  : true,
+        userRoles   : true,
+        pwdAdmins   : true,
+    });
+
+
+    async #valid( userInput: UpdateUserInput ) {
         if ( userInput.email ) {
             const email = await this.user.findUnique({
                 where: {
@@ -60,11 +76,12 @@ export class UserService extends PrismaClient implements OnModuleInit {
 
     async findAll( currentUser: User ): Promise<User[]> {
         return await this.user.findMany({
-            where: {
+            where   : {
                 ...this.#where(),
                 apiUserId: currentUser.id
-            }
-        }) as User[];
+            },
+            include: this.#guardianIncludes()
+        }) as unknown as User[];
     }
 
 
@@ -78,31 +95,31 @@ export class UserService extends PrismaClient implements OnModuleInit {
                 id,
                 ...this.#where()
             },
-            include: {
-                attributes: true
-            }
+            include: this.#guardianIncludes()
         });
 
-        if ( user?.apiUserId !== currentUser.id && !currentUser.apiUserId ) {
+        if ( user?.apiUserId !== currentUser.id && !currentUser.apiUserId && id !== currentUser.id ) {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
         }
 
         if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
 
-        return user as User;
+        return user as unknown as User;
     }
 
 
-    async update( currentUser: User, updateUserInput: UpdateUserInput ) {
+    async update(
+        currentUser: User,
+        updateUserInput: UpdateUserInput
+    ): Promise<User> {
         await this.findOne( currentUser, updateUserInput.id );
         await this.#valid( updateUserInput );
 
         return this.user.update({
-            where: {
-                id: updateUserInput.id
-            },
-            data: updateUserInput
-        });
+            where   : { id: updateUserInput.id },
+            data    : updateUserInput,
+            include : this.#guardianIncludes()
+        }) as unknown as User;
     }
 
 

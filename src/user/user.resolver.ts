@@ -1,11 +1,10 @@
-import { ParseUUIDPipe, UseGuards }                            from '@nestjs/common';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }  from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }      from '@auth/decorators/current-user.decorator';
 import { UserService }      from '@user/user.service';
 import { User }             from '@user/entities/user.entity';
-import { CreateUserInput }  from '@user/dto/create-user.input';
 import { UpdateUserInput }  from '@user/dto/update-user.input';
 
 
