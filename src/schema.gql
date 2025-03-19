@@ -82,6 +82,7 @@ type User {
   nickname: String
   name: String
   birthdate: DateTime
+  phone: String
   isDeleted: Boolean!
   isActive: Boolean!
   avatar: String
@@ -124,7 +125,7 @@ type Query {
 
 type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
-  removeSecret: SecretEntity!
+  removeSecret: Boolean!
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
   createRole(createRoleInput: CreateRoleInput!): Role!
@@ -143,11 +144,20 @@ input CreateSecretInput {
 }
 
 input UpdateUserInput {
+  id: ID!
   email: String
   nickname: String
   name: String
+  phone: String
   birthdate: DateTime
   avatar: String
+  googleId: String
+  microsoftId: String
+  facebookId: String
+  githubId: String
+  appleId: String
+  otherId: String
+  isActive: Boolean
 }
 
 input CreateRoleInput {
