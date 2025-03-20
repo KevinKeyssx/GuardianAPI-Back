@@ -6,7 +6,7 @@ import { CreateRoleInput } from '@roles/dto/create-role.input';
 
 
 @InputType()
-export class UpdateRoleInput extends PartialType(CreateRoleInput) {
+export class UpdateRoleInput extends PartialType( CreateRoleInput ) {
 
     @IsUUID()
     @Field( () => ID )

@@ -1,5 +1,5 @@
-import { UseGuards } from '@nestjs/common';
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }  from '@auth/guards/jwt-auth.guard';
 import { RolesService }     from '@roles/roles.service';
@@ -7,6 +7,8 @@ import { Role }             from '@roles/entities/role.entity';
 import { CreateRoleInput }  from '@roles/dto/create-role.input';
 import { UpdateRoleInput }  from '@roles/dto/update-role.input';
 import { UserRole }         from '@roles/entities/user-role.entity';
+import { CurrentUser }      from '@auth/decorators/current-user.decorator';
+import { User }             from '@user/entities/user.entity';
 
 
 @UseGuards( SecretAuthGuard( false ))
@@ -20,48 +22,55 @@ export class RolesResolver {
 
     @Mutation(() => Role )
     createRole(
+        @CurrentUser() currentUser: User,
         @Args( 'createRoleInput' ) createRoleInput: CreateRoleInput
     ) {
-        return this.rolesService.create( createRoleInput );
+        return this.rolesService.create( currentUser, createRoleInput );
     }
 
 
     @Mutation(() => UserRole , { name: 'assignRoleToUser' })
     assignRoleToUser(
         @Args( 'roleId', { type: () => ID }) roleId: string,
-        @Args( 'userId', { type: () => ID }) userId: string
+        @Args( 'userId', { type: () => ID }) userId: string,
+        @CurrentUser() currentUser: User
     ) {
-        return this.rolesService.assignRoleToUser( roleId, userId );
+        return this.rolesService.assignRoleToUser( roleId, userId, currentUser );
     }
 
 
     @Query(() => [Role], { name: 'roles' })
-    findAll() {
-        return this.rolesService.findAll();
+    findAll(
+        @CurrentUser() currentUser: User
+    ) {
+        return this.rolesService.findAll( currentUser );
     }
 
 
     @Query(() => Role, { name: 'role' })
     findOne(
-        @Args( 'id', { type: () => ID }) id: string
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @CurrentUser() currentUser: User
     ) {
-        return this.rolesService.findOne( id );
+        return this.rolesService.findOne( id, currentUser );
     }
 
 
     @Mutation( () => Role )
     updateRole(
-        @Args( 'updateRoleInput' ) updateRoleInput: UpdateRoleInput
+        @Args( 'updateRoleInput' ) updateRoleInput: UpdateRoleInput,
+        @CurrentUser() currentUser: User
     ) {
-        return this.rolesService.update( updateRoleInput );
+        return this.rolesService.update( updateRoleInput, currentUser );
     }
 
 
     @Mutation( () => Role )
     removeRole(
-        @Args('id', { type: () => ID }) id: string
+        @Args('id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @CurrentUser() currentUser: User
     ) {
-        return this.rolesService.remove( id );
+        return this.rolesService.remove( id, currentUser );
     }
 
 }
