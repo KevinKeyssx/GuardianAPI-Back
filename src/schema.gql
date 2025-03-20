@@ -163,13 +163,11 @@ input UpdateUserInput {
 input CreateRoleInput {
   name: String!
   description: String
-  userId: String
 }
 
 input UpdateRoleInput {
   name: String
   description: String
-  userId: String
   id: ID!
 }
 

@@ -98,11 +98,10 @@ export class UserService extends PrismaClient implements OnModuleInit {
             include: this.#guardianIncludes()
         });
 
-        if ( user?.apiUserId !== currentUser.id && !currentUser.apiUserId && id !== currentUser.id ) {
+        if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
+        if ( user.apiUserId !== currentUser.id && !currentUser.apiUserId && id !== currentUser.id ) {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
         }
-
-        if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
 
         return user as unknown as User;
     }
