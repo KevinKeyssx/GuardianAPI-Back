@@ -38,17 +38,10 @@ export class SignUpDto {
         description : 'The role of the user',
         minLength   : 3,
         maxLength   : 30,
-    })
-
-    @ApiProperty({
-        example     : 'admin',
-        description : 'The role of the user',
-        minLength   : 3,
-        maxLength   : 30,
         required    : false
     })
-    @IsOptional()
     @IsString()
+    @IsOptional()
     @Length( 3, 30 )
     role?: string;
 

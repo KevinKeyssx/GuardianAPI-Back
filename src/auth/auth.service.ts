@@ -1,8 +1,8 @@
 import {
     BadRequestException,
     Injectable,
-    InternalServerErrorException,
     Logger,
+    NotFoundException,
     OnModuleInit,
     UnauthorizedException
 }                       from '@nestjs/common';
@@ -11,9 +11,11 @@ import { JwtService }   from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt      from 'bcryptjs';
 
-import { SignUpDto }    from '@auth/dto/singup.dto';
-import { AuthResponse } from '@auth/types/auth-response.type';
-import { User }         from '@user/entities/user.entity';
+import { SignUpDto }        from '@auth/dto/singup.dto';
+import { AuthResponse }     from '@auth/types/auth-response.type';
+import { ENVS }             from '@config/envs';
+import { PrismaException }  from '@config/prisma-catch';
+import { User }             from '@user/entities/user.entity';
 
 
 @Injectable()
@@ -34,41 +36,25 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         return this.jwtService.sign({ id: userId });
     }
 
-    #handleErrors( error:any ): never {
-        if (  error.code === 'P2002' ) {
-            this.#logger.error( `${ error.meta.target } already exists.` );
-            throw new BadRequestException( `${ error.meta.target } already exists.` );
-        }
 
-        if (  error.code === 'P2003' ) {
-            const id = (error.message as string).split(':')[2].split('_')[0].replace(' `','');
-            this.#logger.error( `${ id } not found.` );
-            throw new BadRequestException( `${ id } not found.` );
-        }
+    async signUp({ password, role, apiUserId, email }: SignUpDto ): Promise<AuthResponse> {
+        let roleId  : string | null = null;
+        let user    : User | null = null;
 
-        this.#logger.error( 'Error unknown #P0000x' );
-        throw new InternalServerErrorException( 'Error unknown #P0000x' );
-    }
-
-
-    async signUp( signUpDto: SignUpDto ): Promise<AuthResponse> {
-        let roleId: string | null = null;
-
-        const { password, role, apiUserId, ...email } = signUpDto;
-
-        if ( apiUserId && role ) {
-            throw new BadRequestException( 'apiUserId and role cannot be used together.' );
-        }
+        if ( apiUserId ) user = await this.user.findUnique({ where: { id: apiUserId } }) as User;
 
         if ( role ) {
-            const existRole = await this.role.findUnique({
+            const existRole = await this.role.findFirst({
                 where: {
                     name    : role,
-                    userId  : null
+                    userId  : user?.id
                 }
             });
 
-            if ( !existRole ) throw new BadRequestException( `Role ${role} not found.` );
+            if ( !existRole ) throw new NotFoundException( `Role ${role} not found.` );
+            if ( existRole.name === ENVS.ROLE_SECRET && apiUserId ) {
+                throw new BadRequestException( 'Not allowed to create user.' );
+            }
 
             roleId = existRole.id;
         }
@@ -76,7 +62,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         try {
             const newUser = await this.user.create({
                 data: {
-                    ...email,
+                    email,
                     apiUserId,
                     ...( role && roleId ) && { userRoles: { create: { roleId }}},
                 }
@@ -96,7 +82,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 user    : rest
             } as AuthResponse;
         } catch ( error ) {
-            this.#handleErrors( error );
+            throw PrismaException.catch( error );
         }
     }
 
