@@ -18,6 +18,7 @@
 			"@secrets/*"        : ["src/secrets/*"],
 			"@pwd-admin/*"		: ["src/pwd-admin/*"],
             "@config/*"         : ["src/config/*"],
+            "@prisma/*"         : ["src/prisma/*"],
 		},
 		"incremental": true,
 		"skipLibCheck": true,

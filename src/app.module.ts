@@ -14,6 +14,7 @@ import { RolesModule }          from '@roles/roles.module';
 import { UserAttributeModule }  from '@user-attribute/user-attribute.module';
 import { SecretsModule }        from '@secrets/secrets.module';
 import { PwdAdminModule }       from '@pwd-admin/pwd-admin.module';
+import { PrismaModule }         from '@prisma/prisma.module';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { PwdAdminModule }       from '@pwd-admin/pwd-admin.module';
         UserAttributeModule,
         PwdAdminModule,
         SecretsModule,
+        PrismaModule,
     ],
     controllers : [ AppController ],
     providers   : [],
