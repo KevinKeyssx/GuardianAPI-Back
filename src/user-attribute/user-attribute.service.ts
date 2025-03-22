@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+    OnModuleInit
+} from '@nestjs/common';
 
 import {
     AttributeType,
@@ -7,10 +13,12 @@ import {
 }                               from '@prisma/client';
 import { validate as isUUID }   from 'uuid';
 
+import { PrismaException }                  from '@config/prisma-catch';
 import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
 import { UpdateUserAttributeInput }         from '@user-attribute/dto/update-user-attribute.input';
 import { UpdateValueUserAttributeInput }    from '@user-attribute/dto/update-value-user-attribute.input';
 import { ValueAttribute }                   from '@user-attribute/entities/value-attribute.entity';
+import { User }                             from '@user/entities/user.entity';
 
 
 @Injectable()
@@ -20,52 +28,71 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 		this.$connect();
 	}
 
+    async #validPermissions( userId: string, currentUser: User ): Promise<void> {
+        const user = await this.user.findUnique({
+            where: {
+                id: userId
+            }
+        });
+
+        if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
+        if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
+            throw new ForbiddenException( 'You do not have permission to this attribute' );
+    }
+
 
     async create(
+        currentUser             : User,
         createUserAttributeInput: CreateUserAttributeInput
     ): Promise<UserAttribute> {
-        const existUserAttibute = await this.userAttribute.findFirst({
-            where: {
-                userId  : createUserAttributeInput.userId,
-                key     : createUserAttributeInput.key
-            }
-        });
+        await this.#validPermissions( createUserAttributeInput.userId, currentUser );
 
-        if ( existUserAttibute ) {
-            throw new BadRequestException( 'Key attribute already exists' );
+        try {
+            return await this.userAttribute.create({
+                data: {
+                    ...createUserAttributeInput,
+                    value: createUserAttributeInput.defaultValue ?? null
+                }
+            });
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'Attribute' );
         }
-
-        return this.userAttribute.create({
-            data: {
-                ...createUserAttributeInput,
-                value: createUserAttributeInput.defaultValue ?? null
-            }
-        });
     }
 
 
     async findAll(
-        userId: string
+        currentUser : User,
+        userId      : string
     ): Promise<UserAttribute[]> {
+        await this.#validPermissions( userId, currentUser );
+
         return await this.userAttribute.findMany({
             where: {
                 userId,
-                isActive: true
+                isActive: true,
+                user: {
+                    apiUserId: currentUser.id
+                },
             }
         });
     }
 
 
-    async findOne( id: string ): Promise<UserAttribute> {
+    async findOne( currentUser: User, id: string ): Promise<UserAttribute> {
         const userAttribute = await this.userAttribute.findUnique({
             where: {
                 id,
                 isActive: true
-            }
+            },
+            include: { user: true }
         });
 
         if ( !userAttribute ) {
             throw new NotFoundException( `User attribute whit id ${id} not found.` );
+        }
+
+        if ( userAttribute.user.apiUserId !== currentUser.id ) {
+            throw new ForbiddenException( 'You do not have permission to this attribute' );
         }
 
         return userAttribute;
@@ -73,13 +100,10 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
 
     async update(
+        currentUser: User,
         updateUserAttributeInput: UpdateUserAttributeInput
     ): Promise<UserAttribute> {
-        const userAttribute = await this.findOne( updateUserAttributeInput.id );
-
-        if ( userAttribute.value !== updateUserAttributeInput.value ) {
-            throw new BadRequestException( "Value attribute can't be updated" );
-        }
+        await this.findOne( currentUser, updateUserAttributeInput.id );
 
         return await this.userAttribute.update({
             where: {
@@ -131,9 +155,10 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
 
     async updateValue(
+        currentUser: User,
         updateUserAttributeInput: UpdateValueUserAttributeInput
     ): Promise<ValueAttribute> {
-        const userAttribute = await this.findOne( updateUserAttributeInput.id );
+        const userAttribute = await this.findOne( currentUser, updateUserAttributeInput.id );
 
         if ( userAttribute.required && !updateUserAttributeInput.value ) {
             throw new BadRequestException( 'Value is required' );
@@ -162,8 +187,8 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async remove( id: string ): Promise<UserAttribute> {
-        await this.findOne( id );
+    async remove( currentUser: User, id: string ): Promise<UserAttribute> {
+        await this.findOne( currentUser, id );
 
         return await this.userAttribute.delete({
             where: {

@@ -27,6 +27,11 @@ export class CreateUserAttributeInput {
     @Field(() => String)
     key: string;
 
+    @IsUUID()
+    @IsDefined()
+    @Field( () => ID )
+    userId: string;
+
     @IsOptional()
     @Field(() => GraphQLJSON, { nullable: true })
     defaultValue?: any;
@@ -84,10 +89,5 @@ export class CreateUserAttributeInput {
     @IsDateString()
     @Field( () => String, {  nullable: true })
     minDate?: string;
-
-    @IsUUID()
-    @IsDefined()
-    @Field( () => ID )
-    userId: string;
 
 }

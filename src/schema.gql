@@ -173,6 +173,7 @@ input UpdateRoleInput {
 
 input CreateUserAttributeInput {
   key: String!
+  userId: ID!
   defaultValue: JSON
   isActive: Boolean = true
   type: AttributeType!
@@ -184,11 +185,11 @@ input CreateUserAttributeInput {
   required: Boolean = false
   maxDate: String
   minDate: String
-  userId: ID!
 }
 
 input UpdateUserAttributeInput {
   key: String
+  userId: ID
   defaultValue: JSON
   isActive: Boolean = true
   type: AttributeType
@@ -200,7 +201,6 @@ input UpdateUserAttributeInput {
   required: Boolean = false
   maxDate: String
   minDate: String
-  userId: ID
   id: ID!
   value: JSON
 }

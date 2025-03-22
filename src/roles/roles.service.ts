@@ -43,8 +43,6 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         userId: string,
         currentUser: User
     ): Promise<UserRole> {
-        // await this.findOne( roleId, currentUser );
-
         const user = await this.user.findUnique({ where: { id: userId }});
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
