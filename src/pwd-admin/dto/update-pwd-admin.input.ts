@@ -1,4 +1,4 @@
-import { InputType, Field, PartialType, ID, Int } from '@nestjs/graphql';
+import { InputType, Field, ID, Int } from '@nestjs/graphql';
 
 import {
     IsBoolean,
@@ -13,23 +13,22 @@ import {
 }               from 'class-validator';
 import { Type } from 'class-transformer';
 
-import { CreatePwdAdminInput } from './create-pwd-admin.input';
 
 @InputType()
-export class UpdatePwdAdminInput extends PartialType( CreatePwdAdminInput ) {
+export class UpdatePwdAdminInput {
 
     @IsUUID()
     @Field( () => ID )
     id: string;
 
-    @IsOptional()
-    @IsString()
-    @Length( 1, 255 )
-    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$/, {
-        message: 'Password must have at least 10 characters, one uppercase, one lowercase, one number, and one special character.'
-    })
-    @Field( () => String, { nullable: true })
-    password?: string;
+    // @IsOptional()
+    // @IsString()
+    // @Length( 1, 255 )
+    // @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$/, {
+    //     message: 'Password must have at least 10 characters, one uppercase, one lowercase, one number, and one special character.'
+    // })
+    // @Field( () => String, { nullable: true })
+    // password?: string;
 
     @IsOptional()
     @IsNumber()

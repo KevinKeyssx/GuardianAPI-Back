@@ -137,6 +137,7 @@ type Mutation {
   updateValueUserAttribute(updateValueUserAttributeInput: UpdateValueUserAttributeInput!): ValueAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
   updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
+  updatePassword(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
 }
 
 input CreateSecretInput {
@@ -211,9 +212,7 @@ input UpdateValueUserAttributeInput {
 }
 
 input UpdatePwdAdminInput {
-  userId: String
   id: ID!
-  password: String
   alertDay: Int
   howOften: Int
   changeLastAt: DateTime

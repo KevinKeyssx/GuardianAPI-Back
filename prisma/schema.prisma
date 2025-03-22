@@ -136,18 +136,34 @@ model UserAttribute {
 }
 
 model PwdAdmin {
-    id           String   @id @default(uuid())
-    password     String   // Hash de la contraseña histórica
-    expiresAt    DateTime?
-    isActive     Boolean  @default(true)
-    lastUsedAt   DateTime?
-    mustChange   Boolean  @default(false)
+    id              String   @id @default(uuid())
+    password        String   // Hash de la contraseña histórica
+    isActive        Boolean  @default(true)
+    expiresAt       DateTime?
+    willExpireAt    DateTime?
+    lastUsedAt      DateTime?
+    mustChange      Boolean  @default(false)
+    version         Int      @default(0)
+    alertDay        Int
+    howOften        Int
 
-    user         User     @relation(fields: [userId], references: [id])
-    userId       String
+    user            User     @relation(fields: [userId], references: [id])
+    userId          String
 
-    createdAt    DateTime @default(now())
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime  @updatedAt
 
     @@index([userId])
-    @@unique([userId, password])
+}
+
+
+// Auditoría TODO: Ejecutar migración
+model AuditLog {
+    id        String   @id @default(uuid())
+    action    String
+    model     String
+    recordId  String?
+    userId    String?
+    details   Json?
+    timestamp DateTime @default(now())
 }
