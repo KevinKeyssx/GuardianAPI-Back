@@ -121,17 +121,22 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         const user = await this.user.findUnique( {
             where: {
                 id      : userId,
-                isActive: true
+                isActive: true,
+                pwdAdmins: { some: { isActive: true } }
             },
-            include: { userRoles: { include: { role: true }}}
+            include: {
+                userRoles: { include: { role: true }},
+                pwdAdmins: true
+            },
         });
 
-        if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
+        if ( !user ) throw new UnauthorizedException( 'Unauthorized user.' );
 
         return {
             ...user,
             roles       : user.userRoles.map( userRole => userRole.role ),
-            userRoles   : undefined
+            userRoles   : undefined,
+            pwdAdmins   : undefined
         } as User;
     }
 
