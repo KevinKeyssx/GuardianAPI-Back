@@ -115,11 +115,12 @@ export class RolesService extends PrismaClient implements OnModuleInit {
     async remove( id: string, currentUser: User ): Promise<Role> {
         await this.findOne( id, currentUser );
 
-        return this.role.delete({
-            where: {
-                id
-            }
-        });
+        try {
+            return this.role.delete({ where: { id }});
+        }
+        catch (error) {
+            throw PrismaException.catch( error, 'Role' );
+        }
     }
 
 }

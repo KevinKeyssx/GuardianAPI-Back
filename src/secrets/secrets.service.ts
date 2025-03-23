@@ -3,6 +3,7 @@ import { Injectable, NotFoundException, OnModuleInit, UnauthorizedException } fr
 import { randomBytes, createHmac }      from 'crypto';
 import { Prisma, PrismaClient, Secret } from '@prisma/client';
 
+import { PrismaException }          from '@config/prisma-catch';
 import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
@@ -65,31 +66,36 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
         currentUser         : User,
         createSecretInput   : CreateSecretInput
     ): Promise<GenerateSecretResponse> {
-        await this.secret.deleteMany({
-            where: {
-                apiUserId: currentUser.id,
-            }
-        });
+        try {
+            await this.secret.deleteMany({
+                where: {
+                    apiUserId: currentUser.id,
+                }
+            });
 
-        const secret        = this.#generateSecret();
-        const secretHash    = this.#generateSecretHash(currentUser.id, secret);
-        const createdSecret = await this.secret.create({
-            data: {
-                expiresAt   : createSecretInput.expiresAt,
-                apiUserId   : currentUser.id,
-                secret      : secretHash,
-            }
-        });
+            const secret        = this.#generateSecret();
+            const secretHash    = this.#generateSecretHash(currentUser.id, secret);
+            const createdSecret = await this.secret.create({
+                data: {
+                    expiresAt   : createSecretInput.expiresAt,
+                    apiUserId   : currentUser.id,
+                    secret      : secretHash,
+                }
+            });
 
-        const secretData: SecretEntity = {
-            ...createdSecret,
-            expiresAt: createdSecret.expiresAt ?? undefined,
-        };
+            const secretData: SecretEntity = {
+                ...createdSecret,
+                expiresAt: createdSecret.expiresAt ?? undefined,
+            };
 
-        return {
-            secret,
-            secretData
-        };
+            return {
+                secret,
+                secretData
+            };
+
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'Secret' );
+        }
     }
 
 
@@ -113,8 +119,8 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
                     apiUserId: currentUser.id
                 }
             });
-        } catch (error) {
-            throw new NotFoundException( `Secret to user ${currentUser.id} not found.` );
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'Secret' );
         }
     }
 }

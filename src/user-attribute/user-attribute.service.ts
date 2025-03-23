@@ -28,12 +28,9 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 		this.$connect();
 	}
 
+
     async #validPermissions( userId: string, currentUser: User ): Promise<void> {
-        const user = await this.user.findUnique({
-            where: {
-                id: userId
-            }
-        });
+        const user = await this.user.findUnique({ where: { id: userId }});
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
         if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
@@ -190,11 +187,15 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
     async remove( currentUser: User, id: string ): Promise<UserAttribute> {
         await this.findOne( currentUser, id );
 
-        return await this.userAttribute.delete({
-            where: {
-                id
-            }
-        });
+        try {
+            return await this.userAttribute.delete({
+                where: {
+                    id
+                }
+            });
+        } catch (error) {
+            throw PrismaException.catch( error, 'Attribute' );
+        }
     }
 
 }
