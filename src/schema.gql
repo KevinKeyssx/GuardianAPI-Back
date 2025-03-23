@@ -59,12 +59,11 @@ enum AttributeType {
 
 type PwdAdmin {
   id: ID!
-  expiresAt: DateTime
+  willExpireAt: DateTime
   isActive: Boolean!
-  mustChange: Boolean!
+  isGuardian: Boolean!
   alertDay: Int
   howOften: Int
-  changeLastAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -136,8 +135,8 @@ type Mutation {
   updateUserAttribute(updateUserAttributeInput: UpdateUserAttributeInput!): UserAttribute!
   updateValueUserAttribute(updateValueUserAttributeInput: UpdateValueUserAttributeInput!): ValueAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
-  updatePwdAdmin(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
-  updatePassword(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
+  activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
+  changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
 }
 
 input CreateSecretInput {
@@ -212,11 +211,11 @@ input UpdateValueUserAttributeInput {
 }
 
 input UpdatePwdAdminInput {
-  id: ID!
-  alertDay: Int
-  howOften: Int
-  changeLastAt: DateTime
-  expiresAt: DateTime
-  isActive: Boolean
-  mustChange: Boolean
+  alertDay: Int!
+  howOften: Int!
+}
+
+input UpdatePwdInput {
+  currentPassword: String!
+  newPassword: String!
 }
