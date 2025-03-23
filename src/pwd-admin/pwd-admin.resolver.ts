@@ -6,6 +6,7 @@ import { CurrentUser }          from '@auth/decorators/current-user.decorator';
 import { PwdAdminService }      from '@pwd-admin/pwd-admin.service';
 import { PwdAdmin }             from '@pwd-admin/entities/pwd-admin.entity';
 import { UpdatePwdAdminInput }  from '@pwd-admin/dto/update-pwd-admin.input';
+import { UpdatePwdInput }       from '@pwd-admin/dto/update-pwd.input';
 import { User }                 from '@user/entities/user.entity';
 
 
@@ -17,21 +18,21 @@ export class PwdAdminResolver {
     ) {}
 
 
-    @Mutation( () => PwdAdmin, { name: 'updatePwdAdmin' })
-    updatePwdAdmin(
+    @Mutation( () => PwdAdmin, { name: 'activeGuardian' })
+    activeGuardian(
         @CurrentUser() currentUser: User,
         @Args( 'updatePwdAdminInput' ) updatePwdAdminInput: UpdatePwdAdminInput
     ) {
-        return this.pwdAdminService.update( currentUser, updatePwdAdminInput );
+        return this.pwdAdminService.activeGuardian( currentUser, updatePwdAdminInput );
     }
 
 
-    @Mutation( () => PwdAdmin, { name: 'updatePassword' })
-    updatePassword(
+    @Mutation( () => PwdAdmin, { name: 'changePassword' })
+    changePassword(
         @CurrentUser() currentUser: User,
-        @Args( 'updatePwdAdminInput' ) updatePwdAdminInput: UpdatePwdAdminInput
+        @Args( 'updatePwdInput' ) updatePwdInput: UpdatePwdInput
     ) {
-        return this.pwdAdminService.updatePassword( currentUser, updatePwdAdminInput );
+        return this.pwdAdminService.changePassword( currentUser, updatePwdInput );
     }
 
 }

@@ -5,23 +5,20 @@ export class PwdAdmin {
     @Field( () => ID )
     id: string;
 
-    @Field(() => Date, { nullable: true })
-    expiresAt?: Date;
+    @Field( () => Date, { nullable: true })
+    willExpireAt?: Date;
 
-    @Field(() => Boolean)
+    @Field( () => Boolean )
     isActive: boolean;
 
-    @Field(() => Boolean)
-    mustChange: boolean;
+    @Field( () => Boolean )
+    isGuardian: boolean;
 
     @Field( () => Int, {  nullable: true })
-    alertDay: number;
+    alertDay?: number;
 
     @Field( () => Int, { nullable: true })
     howOften?: number;
-
-    @Field( () => Date, { nullable: true })
-    changeLastAt?: Date;
 
     @Field(() => Date)
     createdAt: Date;
