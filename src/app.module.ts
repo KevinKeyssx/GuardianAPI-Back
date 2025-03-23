@@ -37,12 +37,6 @@ import { PrismaModule }         from '@prisma/prisma.module';
             }),
         }),
 
-        // GraphQLModule.forRoot<ApolloDriverConfig>({
-        //     driver          : ApolloDriver,
-        //     playground      : false,
-        //     autoSchemaFile  : join( process.cwd(), 'src/schema.gql' ),
-        //     plugins         : [ ApolloServerPluginLandingPageLocalDefault() ],
-        // }),
         UserModule,
         AuthModule,
         RolesModule,
