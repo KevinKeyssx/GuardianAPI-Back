@@ -5,7 +5,8 @@ import {
     IsOptional,
     IsString,
     IsUUID,
-    Length
+    Length,
+    Matches
 } from "class-validator";
 
 
@@ -23,7 +24,7 @@ export class SignUpDto {
     email: string;
 
     @ApiProperty({
-        example     : '12345678AA!*',
+        example     : 'aaa123AAA*',
         description : 'The password of the user',
         minLength   : 8,
         maxLength   : 100,
@@ -31,6 +32,9 @@ export class SignUpDto {
     @IsString()
     @IsNotEmpty()
     @Length( 8, 100 )
+    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,100}$/, {
+        message: 'Password must have at least 8 characters, one uppercase, one lowercase, one number, and one special character.'
+    })
     password: string;
 
     @ApiProperty({

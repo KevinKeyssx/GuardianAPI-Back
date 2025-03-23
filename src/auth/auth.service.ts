@@ -11,7 +11,7 @@ import { JwtService }   from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt      from 'bcryptjs';
 
-import { SignUpDto }        from '@auth/dto/singup.dto';
+import { SignUpDto }        from '@auth/dto/signup.dto';
 import { AuthResponse }     from '@auth/types/auth-response.type';
 import { ENVS }             from '@config/envs';
 import { PrismaException }  from '@config/prisma-catch';

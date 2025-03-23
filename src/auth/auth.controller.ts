@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
 import { AuthService }  from '@auth/auth.service';
-import { SignUpDto }    from '@auth/dto/singup.dto';
+import { SignUpDto }    from '@auth/dto/signup.dto';
 import { AuthGuard }    from '@auth/guards/auth.guard';
 import { CurrentUser }  from '@auth/decorators/current-user.decorator';
 import { User }         from '@user/entities/user.entity';
