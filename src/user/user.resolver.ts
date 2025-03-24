@@ -1,16 +1,19 @@
-import { ParseUUIDPipe, UseGuards }                             from '@nestjs/common';
-import { Resolver, Query, Mutation, Args, ID, ResolveField }    from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards }                                     from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent, Context }    from '@nestjs/graphql';
 
 import { SecretAuthGuard }      from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }          from '@auth/decorators/current-user.decorator';
-import { SearchArgs }           from '@common/dto/args/search.args';
 import { hideUserMiddleware }   from '@config/hideIfNotApi';
+import { SearchArgs }           from '@common/dto/args/search.args';
+import { AttributesArgs }       from '@common/dto/args/attributes.args';
 import { PaginationArgs }       from '@common/dto/args/pagination.args';
 import { UserService }          from '@user/user.service';
-import { User }                 from '@user/entities/user.entity';
 import { UpdateUserInput }      from '@user/dto/update-user.input';
+import { User }                 from '@user/entities/user.entity';
 import { Role }                 from '@roles/entities/role.entity';
 import { RolesService }         from '@roles/roles.service';
+import { UserAttributeService } from '@user-attribute/user-attribute.service';
+import { UserAttribute }        from '@user-attribute/entities/user-attribute.entity';
 
 
 @Resolver( () => User )
@@ -18,7 +21,8 @@ export class UserResolver {
 
     constructor(
         private readonly userService    : UserService,
-        private readonly rolesService   : RolesService
+        private readonly rolesService   : RolesService,
+        private readonly userAttributeService: UserAttributeService
     ) {}
 
 
@@ -37,8 +41,10 @@ export class UserResolver {
     @Query(() => User, { name: 'user' })
     findOne(
         @CurrentUser() user: User,
-        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @Context() context: any
     ) {
+        context.userId = id;
         return this.userService.findOne( user, id );
     }
 
@@ -69,13 +75,12 @@ export class UserResolver {
      * @param pagination
      * @returns
      * */
-    @UseGuards( SecretAuthGuard( false ))
     @ResolveField( () => [Role], {
         name        : 'roles',
         middleware  : [ hideUserMiddleware ]
     })
     getRolesByUser(
-        @CurrentUser() user : User,
+        @Parent() user      : User,
         @Args() search      : SearchArgs,
         @Args() pagination  : PaginationArgs
     ) {
@@ -83,17 +88,26 @@ export class UserResolver {
     }
 
 
-    @UseGuards( SecretAuthGuard( false ))
     @ResolveField( () => [User], {
         name        : 'users',
         middleware  : [ hideUserMiddleware ]
     })
     getUserRelations(
-        @CurrentUser() user : User,
+        @Parent() user      : User,
         @Args() search      : SearchArgs,
         @Args() pagination  : PaginationArgs
     ) {
         return this.userService.findAll( user, pagination, search );
+    }
+
+
+    @ResolveField( () => [UserAttribute], { name: 'attributes' })
+    getAttributes(
+        @Parent() user      : User,
+        @Context() context  : any,
+        @Args() attributes  : AttributesArgs
+    ) {
+        return this.userAttributeService.findAll( user, context.userId, attributes );
     }
 
 }

@@ -76,7 +76,7 @@ export class User {
     @Field(() => [PwdAdmin], { nullable: true })
     pwdAdmins?: PwdAdmin[];
 
-    @Field(() => [UserAttribute], { nullable: true })
+    // @Field(() => [UserAttribute], { nullable: true })
     attributes?: UserAttribute[];
 
     @Field(() => Date)

@@ -15,39 +15,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type UserAttribute {
-  key: String!
-  value: JSON
-  defaultValue: JSON
-  isActive: Boolean!
-  type: AttributeType!
-  min: Float
-  max: Float
-  minLength: Float
-  maxLength: Float
-  pattern: String
-  required: Boolean
-  maxDate: DateTime
-  minDate: DateTime
-}
-
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-"""
-scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
-
-"""Tipos posibles de atributos"""
-enum AttributeType {
-  STRING
-  NUMBER
-  BOOLEAN
-  DECIMAL
-  LIST
-  JSON
-  DATETIME
-  UUID
-}
-
 type PwdAdmin {
   id: ID!
   willExpireAt: DateTime
@@ -94,16 +61,49 @@ type User {
   userRoles: [UserRole!]
   secrets: [SecretEntity!]
   pwdAdmins: [PwdAdmin!]
-  attributes: [UserAttribute!]
   createdAt: DateTime!
   updatedAt: DateTime!
   roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
   users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
+  attributes(keys: [String!]): [UserAttribute!]!
 }
 
 type GenerateSecretResponse {
   secret: String!
   secretData: SecretEntity!
+}
+
+type UserAttribute {
+  key: String!
+  value: JSON
+  defaultValue: JSON
+  isActive: Boolean!
+  type: AttributeType!
+  min: Float
+  max: Float
+  minLength: Float
+  maxLength: Float
+  pattern: String
+  required: Boolean
+  maxDate: DateTime
+  minDate: DateTime
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""Tipos posibles de atributos"""
+enum AttributeType {
+  STRING
+  NUMBER
+  BOOLEAN
+  DECIMAL
+  LIST
+  JSON
+  DATETIME
+  UUID
 }
 
 type ValueAttribute {
@@ -116,7 +116,8 @@ type Query {
   user(id: ID!): User!
   roles(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Role!]!
   role(id: ID!): Role!
-  userAttributes(userId: ID!): [UserAttribute!]!
+  userAttributes(keys: [String!]): [UserAttribute!]!
+  userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
 }
 

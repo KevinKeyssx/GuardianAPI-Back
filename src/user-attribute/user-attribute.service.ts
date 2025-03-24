@@ -14,6 +14,7 @@ import {
 import { validate as isUUID }   from 'uuid';
 
 import { PrismaException }                  from '@config/prisma-catch';
+import { AttributesArgs }                   from '@common/dto/args/attributes.args';
 import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
 import { UpdateUserAttributeInput }         from '@user-attribute/dto/update-user-attribute.input';
 import { UpdateValueUserAttributeInput }    from '@user-attribute/dto/update-value-user-attribute.input';
@@ -59,17 +60,16 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
     async findAll(
         currentUser : User,
-        userId      : string
+        userId      : string,
+        { keys }    : AttributesArgs
     ): Promise<UserAttribute[]> {
         await this.#validPermissions( userId, currentUser );
 
         return await this.userAttribute.findMany({
             where: {
                 userId,
-                isActive: true,
-                user: {
-                    apiUserId: currentUser.id
-                },
+                isActive    : true,
+                ...(keys && { key: { in: keys }}),
             }
         });
     }

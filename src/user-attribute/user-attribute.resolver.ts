@@ -1,8 +1,9 @@
-import { ParseUUIDPipe, UseGuards }                            from '@nestjs/common';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }                  from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }                      from '@auth/decorators/current-user.decorator';
+import { AttributesArgs }                   from '@common/dto/args/attributes.args';
 import { UserAttributeService }             from '@user-attribute/user-attribute.service';
 import { UserAttribute }                    from '@user-attribute/entities/user-attribute.entity';
 import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
@@ -33,9 +34,20 @@ export class UserAttributeResolver {
     @Query( () => [UserAttribute], { name: 'userAttributes' })
     findAll(
         @CurrentUser() currentUser: User,
-        @Args('userId', { type: () => ID }) userId: string
+        @Args() attributes  : AttributesArgs
     ) {
-        return this.userAttributeService.findAll( currentUser, userId );
+        return this.userAttributeService.findAll( currentUser, currentUser.id, attributes );
+    }
+
+
+    @UseGuards( SecretAuthGuard( true ))
+    @Query( () => [UserAttribute], { name: 'userAttributesByUserId' })
+    findAllByUserId(
+        @CurrentUser() currentUser: User,
+        @Args('userId', { type: () => ID }, ParseUUIDPipe ) userId: string,
+        @Args() attributes  : AttributesArgs
+    ) {
+        return this.userAttributeService.findAll( currentUser, userId, attributes );
     }
 
 

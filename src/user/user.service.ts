@@ -34,12 +34,17 @@ export class UserService extends PrismaClient implements OnModuleInit {
 
 
     #guardianIncludes = () => ({
-        attributes  : true,
-        userRoles   : true,
-        secrets     : true,
+        userRoles   : {
+            include: {
+                role: true,
+                user: true
+            }
+        },
+        pwdAdmins   : { where: { isActive: true }},
+        secrets     : { take: 1 }
+        // attributes  : true,
         // roles       : true,
         // apiUser     : true,
-        pwdAdmins   : true,
         // users       : true,
     });
 
@@ -86,6 +91,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
             take    : each,
             skip    : page,
             orderBy : { [field]: orderBy },
+            include : this.#guardianIncludes(),
             where   : {
                 ...this.#where(),
                 apiUserId: currentUser.id,
@@ -94,8 +100,6 @@ export class UserService extends PrismaClient implements OnModuleInit {
                     mode        : 'insensitive',
                 }
             },
-            include: this.#guardianIncludes(),
-            
         }) as unknown as User[];
     }
 
