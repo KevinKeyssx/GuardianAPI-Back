@@ -9,6 +9,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 
 import { AppController }        from './app.controller';
 import { AuthModule }           from '@auth/auth.module';
+import { CommonModule }         from '@common/common.module';
 import { UserModule }           from '@user/user.module';
 import { RolesModule }          from '@roles/roles.module';
 import { UserAttributeModule }  from '@user-attribute/user-attribute.module';
@@ -44,6 +45,7 @@ import { PrismaModule }         from '@prisma/prisma.module';
         PwdAdminModule,
         SecretsModule,
         PrismaModule,
+        CommonModule,
     ],
     controllers : [ AppController ],
     providers   : [],
