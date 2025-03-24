@@ -21,6 +21,12 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class PwdAdminService extends PrismaClient implements OnModuleInit {
 
+    constructor(
+        @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
+    ) {
+        super();
+    }
+
     onModuleInit() {
         this.$connect();
     }
