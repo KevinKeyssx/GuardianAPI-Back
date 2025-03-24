@@ -55,16 +55,16 @@ export class User {
     @Field(() => String, { nullable: true })
     otherId?: string;
 
-    @Field(() => String, { nullable: true })
+    // @Field(() => String, { nullable: true })
     apiUserId?: string;
 
-    @Field(() => User, { nullable: true })
+    // @Field(() => User, { nullable: true })
     apiUser?: User;
 
-    @Field(() => [User], { nullable: true })
+    // @Field(() => [User], { nullable: true })
     users?: User[];
 
-    @Field(() => [Role], { nullable: true })
+    // @Field(() => [Role], { nullable: true })
     roles?: Role[];
 
     @Field(() => [UserRole], { nullable: true })

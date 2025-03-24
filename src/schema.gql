@@ -2,11 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Role {
+type SecretEntity {
   id: ID!
-  name: String!
-  description: String
-  userId: String
+  expiresAt: DateTime
+  isActive: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -15,14 +14,6 @@ type Role {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
-
-type SecretEntity {
-  id: ID!
-  expiresAt: DateTime
-  isActive: Boolean!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
 
 type UserAttribute {
   key: String!
@@ -68,6 +59,15 @@ type PwdAdmin {
   updatedAt: DateTime!
 }
 
+type Role {
+  id: ID!
+  name: String!
+  description: String
+  userId: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type UserRole {
   id: ID!
   isActive: Boolean!
@@ -91,16 +91,14 @@ type User {
   githubId: String
   appleId: String
   otherId: String
-  apiUserId: String
-  apiUser: User
-  users: [User!]
-  roles: [Role!]
   userRoles: [UserRole!]
   secrets: [SecretEntity!]
   pwdAdmins: [PwdAdmin!]
   attributes: [UserAttribute!]
   createdAt: DateTime!
   updatedAt: DateTime!
+  roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
+  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
 }
 
 type GenerateSecretResponse {
@@ -114,9 +112,9 @@ type ValueAttribute {
 
 type Query {
   secret: SecretEntity!
-  users: [User!]!
+  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
   user(id: ID!): User!
-  roles: [Role!]!
+  roles(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Role!]!
   role(id: ID!): Role!
   userAttributes(userId: ID!): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!

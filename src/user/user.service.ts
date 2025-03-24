@@ -1,3 +1,4 @@
+
 import {
     BadRequestException,
     ForbiddenException,
@@ -9,6 +10,8 @@ import {
 
 import { PrismaClient } from '@prisma/client';
 
+import { PaginationArgs }   from '@common/dto/args/pagination.args';
+import { SearchArgs }       from '@common/dto/args/search.args';
 import { UpdateUserInput }  from '@user/dto/update-user.input';
 import { User }             from '@user/entities/user.entity';
 
@@ -34,10 +37,10 @@ export class UserService extends PrismaClient implements OnModuleInit {
         attributes  : true,
         userRoles   : true,
         secrets     : true,
-        roles       : true,
-        apiUser     : true,
+        // roles       : true,
+        // apiUser     : true,
         pwdAdmins   : true,
-        users       : true,
+        // users       : true,
     });
 
     #apiUserIncludes = () => ({
@@ -74,13 +77,25 @@ export class UserService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async findAll( currentUser: User ): Promise<User[]> {
+    async findAll(
+        currentUser: User,
+        { page, each, field, orderBy }: PaginationArgs,
+        {search}: SearchArgs
+    ): Promise<User[]> {
         return await this.user.findMany({
+            take    : each,
+            skip    : page,
+            orderBy : { [field]: orderBy },
             where   : {
                 ...this.#where(),
-                apiUserId: currentUser.id
+                apiUserId: currentUser.id,
+                [field]: {
+                    contains    : search,
+                    mode        : 'insensitive',
+                }
             },
-            include: this.#guardianIncludes()
+            include: this.#guardianIncludes(),
+            
         }) as unknown as User[];
     }
 
