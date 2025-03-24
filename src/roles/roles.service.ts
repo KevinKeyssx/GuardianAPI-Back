@@ -8,6 +8,8 @@ import {
 import { PrismaClient, Role, UserRole } from '@prisma/client';
 
 import { PrismaException }  from '@config/prisma-catch';
+import { PaginationArgs }   from '@common/dto/args/pagination.args';
+import { SearchArgs }       from '@common/dto/args/search.args';
 import { CreateRoleInput }  from '@roles/dto/create-role.input';
 import { UpdateRoleInput }  from '@roles/dto/update-role.input';
 import { User }             from '@user/entities/user.entity';
@@ -66,18 +68,27 @@ export class RolesService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async findAll( currentUser: User ): Promise<Role[]> {
-        // TODO: Add pagination, by UserId, 
+    async findAll(
+        currentUser             : User,
+        { page, each, orderBy } : PaginationArgs,
+        { search }              : SearchArgs,
+    ): Promise<Role[]> {
         return this.role.findMany({
-            where: {
-                userId: currentUser.id
-            }
+            take    : each,
+            skip    : page,
+            orderBy : { name: orderBy },
+            where   : {
+                userId  : currentUser.id,
+                name    : {
+                    contains    : search,
+                    mode        : 'insensitive',
+                }
+            },
         });
     }
 
 
     async findOne( id: string, currentUser: User ): Promise<Role> {
-        // TODO: Add pagination, by UserId, 
         const role = await this.role.findUnique({
             where: {
                 id,
@@ -92,16 +103,16 @@ export class RolesService extends PrismaClient implements OnModuleInit {
 
 
     async update(
-        updateRoleInput: UpdateRoleInput,
-        currentUser: User
+        updateRoleInput : UpdateRoleInput,
+        currentUser     : User
     ): Promise<Role> {
         await this.findOne( updateRoleInput.id, currentUser );
 
         try {
             return await this.role.update({
                 where: {
-                    id: updateRoleInput.id,
-                    userId: currentUser.id
+                    id      : updateRoleInput.id,
+                    userId  : currentUser.id
                 },
                 data: updateRoleInput
             });
@@ -112,7 +123,10 @@ export class RolesService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async remove( id: string, currentUser: User ): Promise<Role> {
+    async remove(
+        id          : string,
+        currentUser : User
+    ): Promise<Role> {
         await this.findOne( id, currentUser );
 
         try {

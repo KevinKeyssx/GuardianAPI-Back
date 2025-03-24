@@ -19,6 +19,7 @@
 			"@pwd-admin/*"		: ["src/pwd-admin/*"],
             "@config/*"         : ["src/config/*"],
             "@prisma/*"         : ["src/prisma/*"],
+            "@common/*"         : ["src/common/*"],
 		},
 		"incremental": true,
 		"skipLibCheck": true,

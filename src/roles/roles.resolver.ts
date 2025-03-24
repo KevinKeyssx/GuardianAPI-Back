@@ -2,6 +2,8 @@ import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }  from '@auth/guards/jwt-auth.guard';
+import { SearchArgs }       from '@common/dto/args/search.args';
+import { PaginationArgs }   from '@common/dto/args/pagination.args';
 import { RolesService }     from '@roles/roles.service';
 import { Role }             from '@roles/entities/role.entity';
 import { CreateRoleInput }  from '@roles/dto/create-role.input';
@@ -41,9 +43,11 @@ export class RolesResolver {
 
     @Query(() => [Role], { name: 'roles' })
     findAll(
-        @CurrentUser() currentUser: User
+        @CurrentUser() currentUser  : User,
+        @Args() paginationArgs      : PaginationArgs,
+        @Args() searchArgs          : SearchArgs
     ) {
-        return this.rolesService.findAll( currentUser );
+        return this.rolesService.findAll( currentUser, paginationArgs, searchArgs );
     }
 
 
