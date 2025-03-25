@@ -6,6 +6,7 @@ import { JwtService }                       from '@nestjs/jwt';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { RoleUsersModule } from './role-users/role-users.module';
 
 import { AppController }        from './app.controller';
 import { AuthModule }           from '@auth/auth.module';
@@ -46,6 +47,7 @@ import { PrismaModule }         from '@prisma/prisma.module';
         SecretsModule,
         PrismaModule,
         CommonModule,
+        RoleUsersModule,
     ],
     controllers : [ AppController ],
     providers   : [],

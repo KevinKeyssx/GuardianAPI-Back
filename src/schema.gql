@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type RoleUser {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
 type SecretEntity {
   id: ID!
   expiresAt: DateTime
@@ -119,6 +124,8 @@ type Query {
   userAttributes(keys: [String!]): [UserAttribute!]!
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
+  roleUsers: [RoleUser!]!
+  roleUser(id: Int!): RoleUser!
 }
 
 type Mutation {
@@ -136,6 +143,9 @@ type Mutation {
   removeUserAttribute(id: ID!): UserAttribute!
   activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
+  createRoleUser(createRoleUserInput: CreateRoleUserInput!): RoleUser!
+  updateRoleUser(updateRoleUserInput: UpdateRoleUserInput!): RoleUser!
+  removeRoleUser(id: Int!): RoleUser!
 }
 
 input CreateSecretInput {
@@ -217,4 +227,15 @@ input UpdatePwdAdminInput {
 input UpdatePwdInput {
   currentPassword: String!
   newPassword: String!
+}
+
+input CreateRoleUserInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateRoleUserInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
 }
