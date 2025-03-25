@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ForbiddenException,
+    Inject,
     Injectable,
     NotFoundException,
     OnModuleInit
@@ -23,15 +24,19 @@ import { User }                             from '@user/entities/user.entity';
 
 
 @Injectable()
-export class UserAttributeService extends PrismaClient implements OnModuleInit {
+export class UserAttributeService implements OnModuleInit {
+
+    constructor(
+        @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
+    ) {}
 
     onModuleInit() {
-		this.$connect();
+		this.prisma.$connect();
 	}
 
 
     async #validPermissions( userId: string, currentUser: User ): Promise<void> {
-        const user = await this.user.findUnique({ where: { id: userId }});
+        const user = await this.prisma.user.findUnique({ where: { id: userId }});
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
         if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
@@ -46,7 +51,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
         await this.#validPermissions( createUserAttributeInput.userId, currentUser );
 
         try {
-            return await this.userAttribute.create({
+            return await this.prisma.userAttribute.create({
                 data: {
                     ...createUserAttributeInput,
                     value: createUserAttributeInput.defaultValue ?? null
@@ -65,7 +70,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
     ): Promise<UserAttribute[]> {
         await this.#validPermissions( userId, currentUser );
 
-        return await this.userAttribute.findMany({
+        return await this.prisma.userAttribute.findMany({
             where: {
                 userId,
                 isActive    : true,
@@ -76,7 +81,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
 
     async findOne( currentUser: User, id: string ): Promise<UserAttribute> {
-        const userAttribute = await this.userAttribute.findUnique({
+        const userAttribute = await this.prisma.userAttribute.findUnique({
             where: {
                 id,
                 isActive: true
@@ -102,7 +107,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
     ): Promise<UserAttribute> {
         await this.findOne( currentUser, updateUserAttributeInput.id );
 
-        return await this.userAttribute.update({
+        return await this.prisma.userAttribute.update({
             where: {
                 id: updateUserAttributeInput.id
             },
@@ -169,7 +174,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
 
         if ( error ) throw new BadRequestException( error );
 
-        await this.userAttribute.update({
+        await this.prisma.userAttribute.update({
             where: {
                 id: updateUserAttributeInput.id
             },
@@ -188,7 +193,7 @@ export class UserAttributeService extends PrismaClient implements OnModuleInit {
         await this.findOne( currentUser, id );
 
         try {
-            return await this.userAttribute.delete({
+            return await this.prisma.userAttribute.delete({
                 where: {
                     id
                 }

@@ -2,6 +2,7 @@
 import {
     BadRequestException,
     ForbiddenException,
+    Inject,
     Injectable,
     Logger,
     NotFoundException,
@@ -17,12 +18,16 @@ import { User }             from '@user/entities/user.entity';
 
 
 @Injectable()
-export class UserService extends PrismaClient implements OnModuleInit {
+export class UserService implements OnModuleInit {
+
+    constructor(
+        @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
+    ) {}
 
 	#logger = new Logger( UserService.name );
 
     onModuleInit() {
-		this.$connect();
+		this.prisma.$connect();
 		this.#logger.log( '***Connected to DB***' );
 	}
 
@@ -57,7 +62,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
 
     async #valid( userInput: UpdateUserInput ) {
         if ( userInput.email ) {
-            const email = await this.user.findUnique({
+            const email = await this.prisma.user.findUnique({
                 where: {
                     email: userInput.email
                 }
@@ -69,7 +74,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
         }
 
         if ( userInput.nickname ) {
-            const nickname = await this.user.findUnique({
+            const nickname = await this.prisma.user.findUnique({
                 where: {
                     nickname: userInput.nickname
                 }
@@ -87,7 +92,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
         { page, each, field, orderBy }: PaginationArgs,
         {search}: SearchArgs
     ): Promise<User[]> {
-        return await this.user.findMany({
+        return await this.prisma.user.findMany({
             take    : each,
             skip    : page,
             orderBy : { [field]: orderBy },
@@ -109,7 +114,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
         }
 
-        const user = await this.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: {
                 id,
                 ...this.#where()
@@ -133,7 +138,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
         await this.findOne( currentUser, updateUserInput.id );
         await this.#valid( updateUserInput );
 
-        return this.user.update({
+        return this.prisma.user.update({
             where   : { id: updateUserInput.id },
             data    : updateUserInput,
             include : this.#guardianIncludes()
@@ -144,7 +149,7 @@ export class UserService extends PrismaClient implements OnModuleInit {
     async remove( currentUser: User, id: string ): Promise<User> {
         await this.findOne( currentUser, id );
 
-        return await this.user.update({
+        return await this.prisma.user.update({
             where   : { id },
             data    : { isDeleted: true }
         }) as User;

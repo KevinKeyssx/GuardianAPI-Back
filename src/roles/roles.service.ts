@@ -1,5 +1,6 @@
 import {
     ForbiddenException,
+    Inject,
     Injectable,
     NotFoundException,
     OnModuleInit
@@ -16,10 +17,14 @@ import { User }             from '@user/entities/user.entity';
 
 
 @Injectable()
-export class RolesService extends PrismaClient implements OnModuleInit {
+export class RolesService implements OnModuleInit {
+
+    constructor(
+        @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
+    ) {}
 
     onModuleInit() {
-        this.$connect();
+        this.prisma.$connect();
     }
 
 
@@ -28,7 +33,7 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         createRoleInput : CreateRoleInput
     ): Promise<Role> {
         try {
-            return await this.role.create({
+            return await this.prisma.role.create({
                 data: {
                     ...createRoleInput,
                     userId: currentUser.id
@@ -45,14 +50,14 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         userId: string,
         currentUser: User
     ): Promise<UserRole> {
-        const user = await this.user.findUnique({ where: { id: userId }});
+        const user = await this.prisma.user.findUnique({ where: { id: userId }});
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
         if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
             throw new ForbiddenException( 'You are not allowed to assign a role to this user.' );
 
         try {
-            return await this.userRole.create({
+            return await this.prisma.userRole.create({
                 data: {
                     userId,
                     roleId
@@ -73,7 +78,7 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         { page, each, orderBy } : PaginationArgs,
         { search }              : SearchArgs,
     ): Promise<Role[]> {
-        return this.role.findMany({
+        return this.prisma.role.findMany({
             take    : each,
             skip    : page,
             orderBy : { name: orderBy },
@@ -89,7 +94,7 @@ export class RolesService extends PrismaClient implements OnModuleInit {
 
 
     async findOne( id: string, currentUser: User ): Promise<Role> {
-        const role = await this.role.findUnique({
+        const role = await this.prisma.role.findUnique({
             where: {
                 id,
                 userId: currentUser.id
@@ -109,7 +114,7 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         await this.findOne( updateRoleInput.id, currentUser );
 
         try {
-            return await this.role.update({
+            return await this.prisma.role.update({
                 where: {
                     id      : updateRoleInput.id,
                     userId  : currentUser.id
@@ -130,7 +135,7 @@ export class RolesService extends PrismaClient implements OnModuleInit {
         await this.findOne( id, currentUser );
 
         try {
-            return this.role.delete({ where: { id }});
+            return this.prisma.role.delete({ where: { id }});
         }
         catch (error) {
             throw PrismaException.catch( error, 'Role' );

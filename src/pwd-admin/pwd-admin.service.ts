@@ -19,23 +19,21 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 
 @Injectable()
-export class PwdAdminService extends PrismaClient implements OnModuleInit {
+export class PwdAdminService implements OnModuleInit {
 
     constructor(
         @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
-    ) {
-        super();
-    }
+    ) {}
 
     onModuleInit() {
-        this.$connect();
+        this.prisma.$connect();
     }
 
     async activeGuardian(
         currentUser         : User,
         updatePwdAdminInput : UpdatePwdAdminInput
     ): Promise<PwdAdmin> {
-        const pwd = await this.pwdAdmin.findFirst({
+        const pwd = await this.prisma.pwdAdmin.findFirst({
             select: {
                 id          : true,
                 user        : { select: { id: true }},
@@ -55,7 +53,7 @@ export class PwdAdminService extends PrismaClient implements OnModuleInit {
 
         willExpires.setDate( willExpires.getDate() + updatePwdAdminInput.howOften );
 
-        const updatedPwd = await this.pwdAdmin.update({
+        const updatedPwd = await this.prisma.pwdAdmin.update({
             where: { id: pwd.id, version: pwd.version },
             data: {
                 ...updatePwdAdminInput,
@@ -81,7 +79,7 @@ export class PwdAdminService extends PrismaClient implements OnModuleInit {
         if ( currentPassword === newPassword )
             throw new BadRequestException( 'Current password and new password are the same' );
 
-        const pwds = await this.pwdAdmin.findMany({
+        const pwds = await this.prisma.pwdAdmin.findMany({
             select  : {
                 id          : true,
                 password    : true,
@@ -114,7 +112,7 @@ export class PwdAdminService extends PrismaClient implements OnModuleInit {
             }
         }
 
-        return await this.$transaction(async (prisma) => {
+        return await this.prisma.$transaction(async (prisma) => {
             await prisma.pwdAdmin.update({
                 data: {
                     isActive  : false,
@@ -149,7 +147,7 @@ export class PwdAdminService extends PrismaClient implements OnModuleInit {
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async disableExpiredPasswords() {
         const now = new Date();
-        const result = await this.pwdAdmin.updateMany({
+        const result = await this.prisma.pwdAdmin.updateMany({
             where: {
                 isActive: true,
                 expiresAt: { lt: now },

@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import {
+    Inject,
+    Injectable,
+    NotFoundException,
+    OnModuleInit,
+    UnauthorizedException
+} from '@nestjs/common';
 
 import { randomBytes, createHmac }      from 'crypto';
 import { Prisma, PrismaClient, Secret } from '@prisma/client';
@@ -12,10 +18,15 @@ import { ENVS }                     from '@config/envs';
 
 
 @Injectable()
-export class SecretsService extends PrismaClient implements OnModuleInit {
+export class SecretsService implements OnModuleInit {
+
+    constructor(
+        @Inject( 'PRISMA_CLIENT' ) private readonly prisma: PrismaClient
+    ) {}
+
 
     onModuleInit() {
-		this.$connect();
+		this.prisma.$connect();
 	}
 
 
@@ -47,7 +58,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
         userId          : string,
         providedSecret  : string
     ): Promise<boolean> => {
-        const userSecret = await this.secret.findFirst({
+        const userSecret = await this.prisma.secret.findFirst({
             where: {  
                 apiUserId: userId,
                 isActive: true,
@@ -67,7 +78,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
         createSecretInput   : CreateSecretInput
     ): Promise<GenerateSecretResponse> {
         try {
-            await this.secret.deleteMany({
+            await this.prisma.secret.deleteMany({
                 where: {
                     apiUserId: currentUser.id,
                 }
@@ -75,7 +86,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
             const secret        = this.#generateSecret();
             const secretHash    = this.#generateSecretHash(currentUser.id, secret);
-            const createdSecret = await this.secret.create({
+            const createdSecret = await this.prisma.secret.create({
                 data: {
                     expiresAt   : createSecretInput.expiresAt,
                     apiUserId   : currentUser.id,
@@ -100,7 +111,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
 
     async findOne( currentUser: User ): Promise<Secret> {
-        const secret = await this.secret.findFirst({
+        const secret = await this.prisma.secret.findFirst({
             where: {
                 apiUserId: currentUser.id
             }
@@ -114,7 +125,7 @@ export class SecretsService extends PrismaClient implements OnModuleInit {
 
     async remove( currentUser: User ): Promise<Prisma.BatchPayload> {
         try {
-            return await this.secret.deleteMany({
+            return await this.prisma.secret.deleteMany({
                 where: {
                     apiUserId: currentUser.id
                 }
