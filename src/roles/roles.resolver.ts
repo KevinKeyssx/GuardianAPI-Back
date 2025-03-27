@@ -9,7 +9,6 @@ import { RolesService }     from '@roles/roles.service';
 import { Role }             from '@roles/entities/role.entity';
 import { CreateRoleInput }  from '@roles/dto/create-role.input';
 import { UpdateRoleInput }  from '@roles/dto/update-role.input';
-import { UserRole }         from '@roles/entities/user-role.entity';
 import { User }             from '@user/entities/user.entity';
 
 
@@ -28,16 +27,6 @@ export class RolesResolver {
         @Args( 'createRoleInput' ) createRoleInput: CreateRoleInput
     ) {
         return this.rolesService.create( currentUser, createRoleInput );
-    }
-
-
-    @Mutation(() => UserRole , { name: 'assignRoleToUser' })
-    assignRoleToUser(
-        @Args( 'roleId', { type: () => ID }) roleId: string,
-        @Args( 'userId', { type: () => ID }) userId: string,
-        @CurrentUser() currentUser: User
-    ) {
-        return this.rolesService.assignRoleToUser( roleId, userId, currentUser );
     }
 
 

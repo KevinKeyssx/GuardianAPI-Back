@@ -8,7 +8,7 @@ export const auditExtension = Prisma.defineExtension(( client ) => (
                 const currentUserWhere  = ( args as any )?.where?.apiUserId;
                 const result            = await query( args );
 
-                if (['create', 'update', 'delete', 'deleteMany'].includes( operation )) {
+                if (['create', 'update', 'delete'].includes( operation )) {
                     await client.auditLog.create({ data: {
                         action      : operation,
                         model       : model || '',

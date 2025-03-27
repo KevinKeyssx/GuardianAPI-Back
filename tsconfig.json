@@ -20,6 +20,7 @@
             "@config/*"         : ["src/config/*"],
             "@prisma/*"         : ["src/prisma/*"],
             "@common/*"         : ["src/common/*"],
+            "@user-roles/*"     : ["src/user-roles/*"],
 		},
 		"incremental": true,
 		"skipLibCheck": true,

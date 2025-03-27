@@ -1,12 +1,11 @@
 import {
-    ForbiddenException,
     Inject,
     Injectable,
     NotFoundException,
     OnModuleInit
 } from '@nestjs/common';
 
-import { PrismaClient, Role, UserRole } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 import { PrismaException }  from '@config/prisma-catch';
 import { PaginationArgs }   from '@common/dto/args/pagination.args';
@@ -37,34 +36,6 @@ export class RolesService implements OnModuleInit {
                 data: {
                     ...createRoleInput,
                     userId: currentUser.id
-                }
-            });
-        } catch (error) {
-            throw PrismaException.catch( error, 'Role' );
-        }
-    }
-
-
-    async assignRoleToUser(
-        roleId: string,
-        userId: string,
-        currentUser: User
-    ): Promise<UserRole> {
-        const user = await this.prisma.user.findUnique({ where: { id: userId }});
-
-        if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
-        if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
-            throw new ForbiddenException( 'You are not allowed to assign a role to this user.' );
-
-        try {
-            return await this.prisma.userRole.create({
-                data: {
-                    userId,
-                    roleId
-                },
-                include: {
-                    role: true,
-                    user: true
                 }
             });
         } catch (error) {

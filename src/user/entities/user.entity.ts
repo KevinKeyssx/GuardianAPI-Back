@@ -4,7 +4,7 @@ import { Role }             from '@roles/entities/role.entity';
 import { SecretEntity }     from '@secrets/entities/secret.entity';
 import { UserAttribute }    from '@user-attribute/entities/user-attribute.entity';
 import { PwdAdmin }         from '@pwd-admin/entities/pwd-admin.entity';
-import { UserRole }         from '@roles/entities/user-role.entity';
+import { UserRole }         from '@user-roles/entities/user-role.entity';
 
 
 @ObjectType()

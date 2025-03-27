@@ -2,11 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type RoleUser {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
 type SecretEntity {
   id: ID!
   expiresAt: DateTime
@@ -41,9 +36,13 @@ type Role {
 }
 
 type UserRole {
+  """Example field (placeholder)"""
   id: ID!
-  isActive: Boolean!
+
+  """Example field (placeholder)"""
   user: User!
+
+  """Example field (placeholder)"""
   role: Role!
 }
 
@@ -115,6 +114,17 @@ type ValueAttribute {
   value: JSON
 }
 
+type AssignUsersRolesResponse {
+  success: [UserRole!]
+  errors: [ErrorDetail!]
+}
+
+type ErrorDetail {
+  userId: String
+  roleId: String
+  error: String!
+}
+
 type Query {
   secret: SecretEntity!
   users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
@@ -124,8 +134,6 @@ type Query {
   userAttributes(keys: [String!]): [UserAttribute!]!
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
-  roleUsers: [RoleUser!]!
-  roleUser(id: Int!): RoleUser!
 }
 
 type Mutation {
@@ -134,7 +142,6 @@ type Mutation {
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
   createRole(createRoleInput: CreateRoleInput!): Role!
-  assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
   removeRole(id: ID!): Role!
   createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!
@@ -143,9 +150,10 @@ type Mutation {
   removeUserAttribute(id: ID!): UserAttribute!
   activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
-  createRoleUser(createRoleUserInput: CreateRoleUserInput!): RoleUser!
-  updateRoleUser(updateRoleUserInput: UpdateRoleUserInput!): RoleUser!
-  removeRoleUser(id: Int!): RoleUser!
+  assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
+  asignManyRolesToUsers(asignRolesUsersInput: AsignUsersRolesInput!): AssignUsersRolesResponse!
+  removeUserRole(id: ID!): UserRole!
+  removeManyUserRoles(ids: [ID!]!): AssignUsersRolesResponse!
 }
 
 input CreateSecretInput {
@@ -229,13 +237,7 @@ input UpdatePwdInput {
   newPassword: String!
 }
 
-input CreateRoleUserInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
-input UpdateRoleUserInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
+input AsignUsersRolesInput {
+  userIds: [ID!]!
+  roleIds: [ID!]!
 }
