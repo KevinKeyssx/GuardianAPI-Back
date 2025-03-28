@@ -138,6 +138,7 @@ type Query {
 
 type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
+  expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
   removeSecret: Boolean!
   updateUser(updateUserInput: UpdateUserInput!): User!
   removeUser(id: ID!): User!
@@ -158,6 +159,10 @@ type Mutation {
 
 input CreateSecretInput {
   expiresAt: DateTime
+}
+
+input UpdateSecretInput {
+  expiresAt: DateTime!
 }
 
 input UpdateUserInput {

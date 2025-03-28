@@ -2,11 +2,12 @@ import { UseGuards }                        from '@nestjs/common';
 import { Resolver, Query, Mutation, Args }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }          from '@auth/guards/jwt-auth.guard';
+import { CurrentUser }              from '@auth/decorators/current-user.decorator';
 import { SecretsService }           from '@secrets/secrets.service';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
 import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
-import { CurrentUser }              from '@auth/decorators/current-user.decorator';
+import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
 import { User }                     from '@user/entities/user.entity';
 
 
@@ -18,12 +19,21 @@ export class SecretsResolver {
     ) {}
 
 
-    @Mutation( () => GenerateSecretResponse,{  name: 'generateSecret' })
+    @Mutation( () => GenerateSecretResponse, {  name: 'generateSecret' })
     generateSecret(
         @CurrentUser() user: User,
         @Args( 'createSecretInput' ) createSecretInput: CreateSecretInput
     ) {
         return this.secretsService.create( user, createSecretInput );
+    }
+
+
+    @Mutation( () => SecretEntity, {  name: 'expiresAtSecret' })
+    updateSecret(
+        @CurrentUser() user: User,
+        @Args( 'updateSecretInput' ) updateSecretInput: UpdateSecretInput
+    ) {
+        return this.secretsService.updateExpiresAt( user, updateSecretInput );
     }
 
 

@@ -4,17 +4,19 @@ import {
     NotFoundException,
     OnModuleInit,
     UnauthorizedException
-} from '@nestjs/common';
+}                               from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { randomBytes, createHmac }      from 'crypto';
 import { Prisma, PrismaClient, Secret } from '@prisma/client';
 
+import { ENVS }                     from '@config/envs';
 import { PrismaException }          from '@config/prisma-catch';
 import { CreateSecretInput }        from '@secrets/dto/create-secret.input';
 import { GenerateSecretResponse }   from '@secrets/entities/secret-response.entity';
 import { SecretEntity }             from '@secrets/entities/secret.entity';
+import { UpdateSecretInput }        from '@secrets/dto/update-secret.input';
 import { User }                     from '@user/entities/user.entity';
-import { ENVS }                     from '@config/envs';
 
 
 @Injectable()
@@ -110,6 +112,27 @@ export class SecretsService implements OnModuleInit {
     }
 
 
+    async updateExpiresAt(
+        currentUser     : User,
+        { expiresAt }   : UpdateSecretInput
+    ): Promise<Secret> {
+        try {
+            const secret = await this.findOne( currentUser );
+
+            return await this.prisma.secret.update({
+                where   : {
+                    id: secret.id,
+                    isActive: true,
+                    apiUserId: currentUser.id
+                },
+                data    : { expiresAt }
+            });
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'Secret' );
+        }
+    }
+
+
     async findOne( currentUser: User ): Promise<Secret> {
         const secret = await this.prisma.secret.findFirst({
             where: {
@@ -133,5 +156,23 @@ export class SecretsService implements OnModuleInit {
         } catch ( error ) {
             throw PrismaException.catch( error, 'Secret' );
         }
+    }
+
+
+    @Cron( CronExpression.EVERY_DAY_AT_MIDNIGHT )
+    async disableExpiredPasswords() {
+        const now = new Date();
+
+        await this.prisma.secret.updateMany({
+            where: {
+                isActive        : true,
+                expiresAt       : { lt: now },
+            },
+            data: {
+                isActive    : false,
+                // expiresAt   : now,
+                // willExpireAt: now
+            }
+        });
     }
 }
