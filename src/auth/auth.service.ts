@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     Injectable,
+    InternalServerErrorException,
     Logger,
     NotFoundException,
     OnModuleInit,
@@ -16,6 +17,8 @@ import { AuthResponse }     from '@auth/types/auth-response.type';
 import { ENVS }             from '@config/envs';
 import { PrismaException }  from '@config/prisma-catch';
 import { User }             from '@user/entities/user.entity';
+import { SocialSigninDto } from './dto/social-signin.dto';
+import { SocialSigninProvider } from './enums/social-signin.enum';
 
 
 @Injectable()
@@ -32,8 +35,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         this.#logger.log( '***Connected to DB AUTH***' );
 	}
 
+
     #getJwtToken( userId: string ) {
-        return this.jwtService.sign({ id: userId });
+        return this.jwtService.sign({ id: userId }, { expiresIn: '4h' });
     }
 
 
@@ -145,5 +149,94 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         token: this.#getJwtToken( user.id ),
         user
     }) as AuthResponse;
+
+
+
+
+    async signInSocial(
+        { provider, accessToken }: SocialSigninDto
+    ): Promise<AuthResponse> {
+        try {
+            const userInfo = {
+                [SocialSigninProvider.GOOGLE]    : await this.#verifyGoogleToken( accessToken ),
+                [SocialSigninProvider.FACEBOOK]  : await this.#verifyFacebookToken( accessToken ),
+                [SocialSigninProvider.GITHUB]    : await this.#verifyGitHubToken( accessToken ),
+                [SocialSigninProvider.X]         : await this.#verifyXToken( accessToken ),
+                [SocialSigninProvider.TWITCH]    : await this.#verifyTwitchToken( accessToken )
+            }[provider];
+
+            const user = await this.user.findUnique({ where: { email: userInfo.email }});
+
+            if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
+
+            if ( !user ) {
+                // TODO: Ingresar nuevo usuario
+                // En este punto se pude crear un usuario sin contraseña
+            }
+
+            const { apiUserId, ...rest } = user;
+
+            return {
+                token   : this.#getJwtToken( user.id ),
+                user    : rest
+            } as AuthResponse;
+        } catch ( error ) {
+            throw new UnauthorizedException( 'Invalid access token' );
+        }
+    }
+
+    async #verifyGoogleToken( accessToken: string ) {
+        try {
+            const response = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${accessToken}`);
+
+            if ( !response.ok ) {
+                throw new UnauthorizedException( 'Invalid Google token' );
+            }
+
+            const data = await response.json();
+
+            if ( !data.email ) {
+                throw new UnauthorizedException( 'Invalid token response from Google' );
+            }
+
+            return { email: data.email };
+        } catch ( error ) {
+            if ( error instanceof UnauthorizedException ) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException( 'Error verifying Google token' );
+        }
+    }
+
+    async #verifyFacebookToken( accessToken: string ) {
+        const response = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
+        const data = await response.json();
+        return { email: data.email };
+    }
+
+    async #verifyGitHubToken( accessToken: string ) {
+        const response = await fetch('https://api.github.com/user', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const data = await response.json();
+        return { email: data.email };
+    }
+
+    async #verifyXToken( accessToken: string ) {
+        const response = await fetch('https://api.twitter.com/2/me', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const data = await response.json();
+        return { email: data.email };
+    }
+
+    async #verifyTwitchToken( accessToken: string ) {
+        const response = await fetch('https://id.twitch.tv/oauth2/validate', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const data = await response.json();
+        return { email: data.email };
+    }
 
 }
