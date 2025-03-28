@@ -4,6 +4,7 @@ import { Module }                           from '@nestjs/common';
 import { GraphQLModule }                    from '@nestjs/graphql';
 import { JwtService }                       from '@nestjs/jwt';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ScheduleModule }                   from '@nestjs/schedule';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
@@ -38,6 +39,8 @@ import { UserRolesModule }      from '@user-roles/user-roles.module';
                 },
             }),
         }),
+
+        ScheduleModule.forRoot(),
 
         UserModule,
         AuthModule,

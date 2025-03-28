@@ -7,7 +7,8 @@ import {
     InternalServerErrorException,
     NotFoundException,
     OnModuleInit
-} from '@nestjs/common';
+}                               from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { PrismaClient, PwdAdmin }   from '@prisma/client';
 import * as bcrypt                  from 'bcryptjs';
@@ -15,7 +16,6 @@ import * as bcrypt                  from 'bcryptjs';
 import { UpdatePwdAdminInput }  from '@pwd-admin/dto/update-pwd-admin.input';
 import { UpdatePwdInput }       from '@pwd-admin/dto/update-pwd.input';
 import { User }                 from '@user/entities/user.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 
 @Injectable()
@@ -144,18 +144,22 @@ export class PwdAdminService implements OnModuleInit {
         });
     }
 
-    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+
+    @Cron( CronExpression.EVERY_DAY_AT_MIDNIGHT )
     async disableExpiredPasswords() {
         const now = new Date();
-        const result = await this.prisma.pwdAdmin.updateMany({
-            where: {
-                isActive: true,
-                expiresAt: { lt: now },
-            },
-            data: { isActive: false },
-        });
 
-        console.log(`Desactivadas ${result.count} contraseñas expiradas.`);
+        await this.prisma.pwdAdmin.updateMany({
+            where: {
+                isActive        : true,
+                isGuardian      : true,
+                willExpireAt    : { lt: now },
+            },
+            data: {
+                isActive    : false,
+                expiresAt   : now
+            }
+        });
     }
 
 }
