@@ -7,6 +7,7 @@ import { INestApplication }                 from '@nestjs/common/interfaces';
 import { AuthService }      from '@auth/auth.service';
 import { AuthController }   from '@auth/auth.controller';
 import { JwtStrategy }      from '@auth/strategies/jwt.strategy';
+import { SocialService }    from '@auth/services/Social.services';
 import { ENVS }             from '@config/envs';
 import { SecretsModule }    from '@secrets/secrets.module';
 
@@ -14,7 +15,7 @@ import { SecretsModule }    from '@secrets/secrets.module';
 @Module({
     controllers : [ AuthController ],
     exports     : [ JwtStrategy, PassportModule, JwtModule ],
-    providers   : [ AuthService, JwtStrategy ],
+    providers   : [ AuthService, JwtStrategy, SocialService ],
     imports     : [ 
         PassportModule.register({ defaultStrategy: 'jwt' }),
 

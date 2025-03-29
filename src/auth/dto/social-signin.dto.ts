@@ -1,10 +1,13 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/mapped-types";
+
 import { IsEnum, IsNotEmpty, IsString, Length } from "class-validator";
 
 import { SocialSigninProvider } from "@auth/enums/social-signin.enum";
-import { ApiProperty } from "@nestjs/swagger";
+import { BasicSignUpDto }       from "@auth/dto/basic-signup.dto";
 
 
-export class SocialSigninDto {
+export class SocialSigninDto extends PartialType( BasicSignUpDto ) {
 
     @ApiProperty({
         example     : SocialSigninProvider.GOOGLE,
@@ -26,4 +29,5 @@ export class SocialSigninDto {
     @IsNotEmpty()
     @Length( 1, 255 )
     accessToken: string;
+
 }
