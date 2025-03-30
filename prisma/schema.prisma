@@ -13,37 +13,71 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model User {
-    id           String       @id @default(uuid())
-    email        String       @unique
-    nickname     String?      @unique
-    name         String?
-    birthdate    DateTime?
-    isDeleted    Boolean      @default(false)
-    isActive     Boolean      @default(true)
-    avatar       String?
-    phone        String?
+enum PlanName {
+    FREE
+    BASIC
+    PREMIUM
+}
 
-    googleId     String?
-    microsoftId  String?
-    facebookId   String?
-    githubId     String?
-    appleId      String?
-    otherId      String?
+enum DiscountType {
+    FIRST_TIME
+    PROMOTION
+    CHRISTMAS
+    NEW_YEAR
+    HALLOWEEN
+    PARTIES
+    OTHER
+}
+
+
+model Plan {
+    id              String   @id @default(uuid())
+    name            PlanName
+    maxUsers        Int      // Máximo de usuarios permitidos (puede ser -1 para ilimitado)
+    maxRoles        Int      // Máximo de roles permitidos
+    maxAttributes   Int
+
+    monthlyPrice    Float    // Precio mensual
+    yearlyPrice     Float    // Precio anual
+    discount        Float?  @default(0) // Porcentaje de descuento (opcional)
+    discountType    DiscountType?  // Tipo/Motivo del descuento (opcional)
+
+    // Relación con User (solo para cuentas API)
+    apiUsers    User[]   // Un plan puede estar asociado a múltiples cuentas API
+
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    version     Int         @default(0)
+}
+
+model User {
+    id          String      @id @default(uuid())
+    email       String      @unique
+    nickname    String?     @unique
+    name        String?
+    birthdate   DateTime?
+    isDeleted   Boolean     @default(false)
+    isActive    Boolean     @default(true)
+    avatar      String?
+    phone       String?
+
+    planId      String?      // ID del plan asociado (opcional)
+    plan        Plan?       @relation(fields: [planId], references: [id])
 
     // Relación para identificar una cuenta API (padre) y sus usuarios asociados (hijos)
     // Si el usuario es creado por una cuenta API, se almacena el id de esa cuenta en apiUserId.
-    apiUserId    String?
-    apiUser      User?        @relation("ApiUserHierarchy", fields: [apiUserId], references: [id])
-    users        User[]       @relation("ApiUserHierarchy")
-    roles        Role[]       // Relación inversa con Role (si una cuenta API tiene roles específicos)
-    secrets      Secret[]
-    pwdAdmins    PwdAdmin[]
-    attributes   UserAttribute[]
-    userRoles    UserRole[]
+    apiUserId   String?
+    apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id])
+    users       User[]      @relation("ApiUserHierarchy")
+    roles       Role[]      // Relación inversa con Role (si una cuenta API tiene roles específicos)
+    secrets     Secret[]
+    pwdAdmins   PwdAdmin[]
+    attributes  UserAttribute[]
+    userRoles   UserRole[]
 
-    createdAt    DateTime     @default(now())
-    updatedAt    DateTime     @updatedAt
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    version     Int       @default(0)
 
     @@index([isActive, isDeleted, apiUserId])
 }
@@ -61,9 +95,10 @@ model Role {
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
+    version     Int       @default(0)
 
     @@unique([userId, name])
-    @@index([userId])
+    @@index([userId, name])
 }
 
 model UserRole {
@@ -76,21 +111,25 @@ model UserRole {
     role       Role     @relation(fields: [roleId], references: [id])
     roleId     String
 
+    version     Int       @default(0)
+
     @@index([userId, roleId, isActive])
     @@unique([userId, roleId])
 }
 
 model Secret {
-    id         String   @id @default(uuid())
-    secret     String   @unique
-    expiresAt  DateTime?
-    isActive   Boolean  @default(true)
+    id              String      @id @default(uuid())
+    secret          String      @unique
+    expiresAt       DateTime?
+    willExpireAt    DateTime?
+    isActive        Boolean     @default(true)
 
-    apiUserId  String
-    apiUser    User     @relation(fields: [apiUserId], references: [id])
+    apiUserId       String
+    apiUser         User        @relation(fields: [apiUserId], references: [id])
 
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+    createdAt       DateTime    @default(now())
+    updatedAt       DateTime    @updatedAt
+    version         Int         @default(0)
 
     @@index([apiUserId, isActive])
 }
@@ -129,6 +168,7 @@ model UserAttribute {
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
+    version     Int       @default(0)
 
     @@index([userId])
     @@unique([userId, key])
@@ -155,7 +195,6 @@ model PwdAdmin {
 }
 
 
-// Auditoría TODO: Ejecutar migración
 model AuditLog {
     id        String   @id @default(uuid())
     action    String
