@@ -82,15 +82,19 @@ export class RolesService implements OnModuleInit {
         updateRoleInput : UpdateRoleInput,
         currentUser     : User
     ): Promise<Role> {
-        await this.findOne( updateRoleInput.id, currentUser );
+        const role = await this.findOne( updateRoleInput.id, currentUser );
 
         try {
             return await this.prisma.role.update({
                 where: {
                     id      : updateRoleInput.id,
-                    userId  : currentUser.id
+                    userId  : currentUser.id,
+                    version : role.version
                 },
-                data: updateRoleInput
+                data: {
+                    ...updateRoleInput,
+                    version: role.version + 1
+                }
             });
         }
         catch ( error ) {
@@ -103,10 +107,8 @@ export class RolesService implements OnModuleInit {
         id          : string,
         currentUser : User
     ): Promise<Role> {
-        await this.findOne( id, currentUser );
-
         try {
-            return this.prisma.role.delete({ where: { id }});
+            return this.prisma.role.delete({ where: { id, userId: currentUser.id }});
         }
         catch (error) {
             throw PrismaException.catch( error, 'Role' );
