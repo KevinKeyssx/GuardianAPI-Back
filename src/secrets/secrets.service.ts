@@ -67,7 +67,7 @@ export class SecretsService implements OnModuleInit {
             },
         });
 
-        if ( !userSecret ) throw new UnauthorizedException( `Invalid secretddddd.` );
+        if ( !userSecret ) throw new UnauthorizedException( `Can't found a active secret for user ${userId}` );
 
         const salt = this.#deriveSalt( userId );
 
@@ -90,15 +90,16 @@ export class SecretsService implements OnModuleInit {
             const secretHash    = this.#generateSecretHash(currentUser.id, secret);
             const createdSecret = await this.prisma.secret.create({
                 data: {
-                    expiresAt   : createSecretInput.expiresAt,
-                    apiUserId   : currentUser.id,
-                    secret      : secretHash,
+                    willExpireAt   : createSecretInput.willExpireAt,
+                    apiUserId      : currentUser.id,
+                    secret         : secretHash,
                 }
             });
 
             const secretData: SecretEntity = {
                 ...createdSecret,
-                expiresAt: createdSecret.expiresAt ?? undefined,
+                willExpireAt    : createdSecret.willExpireAt ?? undefined,
+                expiresAt       : createdSecret.expiresAt ?? undefined,
             };
 
             return {
@@ -114,18 +115,33 @@ export class SecretsService implements OnModuleInit {
 
     async updateExpiresAt(
         currentUser     : User,
-        { expiresAt }   : UpdateSecretInput
+        { willExpireAt }   : UpdateSecretInput
     ): Promise<Secret> {
         try {
-            const secret = await this.findOne( currentUser );
+            const secret = await this.prisma.secret.findFirst({
+                select: {
+                    id: true,
+                    version: true
+                },
+                where: {
+                    apiUserId   : currentUser.id,
+                    isActive    : true
+                }
+            });
+
+            if ( !secret ) throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
 
             return await this.prisma.secret.update({
                 where   : {
-                    id: secret.id,
-                    isActive: true,
-                    apiUserId: currentUser.id
+                    id          : secret.id,
+                    isActive    : true,
+                    apiUserId   : currentUser.id,
+                    version     : secret.version
                 },
-                data    : { expiresAt }
+                data    : {
+                    willExpireAt,
+                    version: secret.version + 1
+                }
             });
         } catch ( error ) {
             throw PrismaException.catch( error, 'Secret' );
@@ -133,16 +149,25 @@ export class SecretsService implements OnModuleInit {
     }
 
 
-    async findOne( currentUser: User ): Promise<Secret> {
+    async findOne( currentUser: User ): Promise<SecretEntity> {
         const secret = await this.prisma.secret.findFirst({
+            select: {
+                id              : true,
+                willExpireAt    : true,
+                expiresAt       : true,
+                isActive        : true,
+                createdAt       : true,
+                updatedAt       : true,
+            },
             where: {
-                apiUserId: currentUser.id
+                apiUserId   : currentUser.id,
+                isActive    : true
             }
         });
 
         if ( !secret ) throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
 
-        return secret;
+        return secret as SecretEntity;
     }
 
 
@@ -166,12 +191,11 @@ export class SecretsService implements OnModuleInit {
         await this.prisma.secret.updateMany({
             where: {
                 isActive        : true,
-                expiresAt       : { lt: now },
+                willExpireAt    : { lt: now },
             },
             data: {
                 isActive    : false,
-                // expiresAt   : now,
-                // willExpireAt: now
+                expiresAt   : now
             }
         });
     }

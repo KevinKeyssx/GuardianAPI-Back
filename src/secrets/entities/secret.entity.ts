@@ -9,6 +9,9 @@ export class SecretEntity {
     @Field(() => Date, { nullable: true })
     expiresAt?: Date;
 
+    @Field(() => Date, { nullable: true })
+    willExpireAt?: Date;
+
     @Field(() => Boolean)
     isActive: boolean;
 

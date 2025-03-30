@@ -8,6 +8,6 @@ export class CreateSecretInput {
     @IsDate()
     @IsOptional()
     @Field( () => Date, { nullable: true } )
-    expiresAt?: Date;
+    willExpireAt?: Date;
 
 }

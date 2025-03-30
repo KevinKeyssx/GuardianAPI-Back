@@ -49,7 +49,6 @@ export class SecretsResolver {
     async removeSecret(
         @CurrentUser() user: User,
     ): Promise<boolean> {
-        const result = await this.secretsService.remove(user);
-        return result.count > 0; 
+        return (await this.secretsService.remove( user )).count > 0;
     }
 }

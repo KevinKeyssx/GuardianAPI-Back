@@ -5,6 +5,7 @@
 type SecretEntity {
   id: ID!
   expiresAt: DateTime
+  willExpireAt: DateTime
   isActive: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -158,11 +159,11 @@ type Mutation {
 }
 
 input CreateSecretInput {
-  expiresAt: DateTime
+  willExpireAt: DateTime
 }
 
 input UpdateSecretInput {
-  expiresAt: DateTime!
+  willExpireAt: DateTime!
 }
 
 input UpdateUserInput {
