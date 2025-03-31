@@ -45,7 +45,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async signUp({ role, apiUserId, email, password }: SignUpDto | PasswordDto ): Promise<AuthResponse> {
+    async signUp(
+        { role, apiUserId, email, password }: SignUpDto | PasswordDto
+    ): Promise<AuthResponse> {
         let roleId  : string    | null = null;
         let user    : User      | null = null;
 
@@ -73,6 +75,11 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                     email,
                     apiUserId,
                     ...( role && roleId ) && { userRoles: { create: { roleId }}},
+                },
+                select: {
+                    id          : true,
+                    email       : true,
+                    createdAt   : true
                 }
             });
 
@@ -85,11 +92,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 });
             }
 
-            const { apiUserId: api, ...rest } = newUser;
-
             return {
                 token   : this.#getJwtToken( newUser.id ),
-                user    : rest
+                user    : newUser
             } as AuthResponse;
         } catch ( error ) {
             throw PrismaException.catch( error );
@@ -97,17 +102,15 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async signIn( signUpDto: SignUpDto ) : Promise<AuthResponse> {
-        const { email, password } = signUpDto;
-
+    async signIn({ email, password }: SignUpDto ) : Promise<AuthResponse> {
         const user = await this.user.findUnique({ where: { email }});
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
 
         const pwdAdmin = await this.pwdAdmin.findFirst({
             where: {
-                userId: user.id,
-                isActive: true
+                userId      : user.id,
+                isActive    : true
             }
         });
 
@@ -116,7 +119,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         if ( !bcrypt.compareSync( password, pwdAdmin.password ))
             throw new UnauthorizedException( 'Invalid credentials.' );
 
-        const { apiUserId, ...rest } = user;
+        const { apiUserId, version, ...rest } = user;
 
         return {
             token   : this.#getJwtToken( user.id ),
@@ -128,9 +131,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     async validate( userId: string ) : Promise<User> {
         const user = await this.user.findUnique( {
             where: {
-                id      : userId,
-                isActive: true,
-                pwdAdmins: { some: { isActive: true } }
+                id          : userId,
+                isActive    : true,
+                pwdAdmins   : { some: { isActive: true } }
             },
             include: {
                 userRoles: { include: { role: true }},
