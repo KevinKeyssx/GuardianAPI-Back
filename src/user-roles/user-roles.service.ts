@@ -61,30 +61,29 @@ export class UserRolesService implements OnModuleInit {
             where  : { id: { in: userIds }, apiUserId: currentUser.id },
             select : { id: true }
         });
-    
+
         const validUserIds = users.map(user => user.id);
-    
+
         const roles = await this.prisma.role.findMany({
             where  : { id: { in: roleIds }, userId: currentUser.id },
             select : { id: true }
         });
+
         const validRoleIds = roles.map(role => role.id);
-    
         const invalidUsers = userIds.filter(id => !validUserIds.includes(id));
         const invalidRoles = roleIds.filter(id => !validRoleIds.includes(id));
-    
         const roleAssignments = validUserIds.flatMap(userId =>
             validRoleIds.map(roleId => ({ userId, roleId }))
         );
 
         try {
             await this.prisma.userRole.createMany({ data: roleAssignments, skipDuplicates: true });
-    
+
             const createdAssignments = await this.prisma.userRole.findMany({
                 where  : { OR: roleAssignments },
                 include: { user: true, role: true }
             });
-        
+
             return {
                 success: createdAssignments,
                 errors: [
