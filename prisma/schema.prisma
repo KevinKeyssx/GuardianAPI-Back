@@ -56,7 +56,6 @@ model User {
     nickname    String?     @unique
     name        String?
     birthdate   DateTime?
-    isDeleted   Boolean     @default(false)
     isActive    Boolean     @default(true)
     avatar      String?
     phone       String?
@@ -67,7 +66,7 @@ model User {
     // Relación para identificar una cuenta API (padre) y sus usuarios asociados (hijos)
     // Si el usuario es creado por una cuenta API, se almacena el id de esa cuenta en apiUserId.
     apiUserId   String?
-    apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id])
+    apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id], onDelete: Cascade)
     users       User[]      @relation("ApiUserHierarchy")
     roles       Role[]      // Relación inversa con Role (si una cuenta API tiene roles específicos)
     secrets     Secret[]
@@ -79,7 +78,7 @@ model User {
     updatedAt   DateTime  @updatedAt
     version     Int       @default(0)
 
-    @@index([isActive, isDeleted, apiUserId])
+    @@index([isActive, apiUserId, email])
 }
 
 model Role {
@@ -89,7 +88,7 @@ model Role {
 
     // Opcional: si el rol es específico para una cuenta API, se asocia a esa cuenta.
     userId   String?
-    user     User?     @relation(fields: [userId], references: [id])
+    user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     userRoles   UserRole[]
 
@@ -105,10 +104,10 @@ model UserRole {
     id         String   @id @default(uuid())
     isActive   Boolean  @default(true)
 
-    user       User     @relation(fields: [userId], references: [id])
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId     String
 
-    role       Role     @relation(fields: [roleId], references: [id])
+    role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
     roleId     String
 
     version     Int       @default(0)
@@ -125,7 +124,7 @@ model Secret {
     isActive        Boolean     @default(true)
 
     apiUserId       String
-    apiUser         User        @relation(fields: [apiUserId], references: [id])
+    apiUser         User        @relation(fields: [apiUserId], references: [id], onDelete: Cascade)
 
     createdAt       DateTime    @default(now())
     updatedAt       DateTime    @updatedAt
@@ -163,7 +162,7 @@ model UserAttribute {
     maxDate     DateTime?
     minDate     DateTime?
 
-    user        User      @relation(fields: [userId], references: [id])
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId      String
 
     createdAt   DateTime  @default(now())
@@ -185,7 +184,7 @@ model PwdAdmin {
     alertDay        Int?
     howOften        Int?
 
-    user            User     @relation(fields: [userId], references: [id])
+    user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId          String
 
     createdAt       DateTime @default(now())

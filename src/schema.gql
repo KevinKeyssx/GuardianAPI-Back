@@ -2,31 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type SecretEntity {
-  id: ID!
-  expiresAt: DateTime
-  willExpireAt: DateTime
-  isActive: Boolean!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
-type PwdAdmin {
-  id: ID!
-  willExpireAt: DateTime
-  isActive: Boolean!
-  isGuardian: Boolean!
-  alertDay: Int
-  howOften: Int
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
 type Role {
   id: ID!
   name: String!
@@ -35,6 +10,11 @@ type Role {
   createdAt: DateTime!
   updatedAt: DateTime!
 }
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
 
 type UserRole {
   """Example field (placeholder)"""
@@ -47,6 +27,26 @@ type UserRole {
   role: Role!
 }
 
+type SecretEntity {
+  id: ID!
+  expiresAt: DateTime
+  willExpireAt: DateTime
+  isActive: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type PwdAdmin {
+  id: ID!
+  willExpireAt: DateTime
+  isActive: Boolean!
+  isGuardian: Boolean!
+  alertDay: Int
+  howOften: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type User {
   id: ID!
   email: String!
@@ -54,28 +54,37 @@ type User {
   name: String
   birthdate: DateTime
   phone: String
-  isDeleted: Boolean!
   isActive: Boolean!
   avatar: String
-  googleId: String
-  microsoftId: String
-  facebookId: String
-  githubId: String
-  appleId: String
-  otherId: String
   userRoles: [UserRole!]
-  secrets: [SecretEntity!]
-  pwdAdmins: [PwdAdmin!]
   createdAt: DateTime!
   updatedAt: DateTime!
-  roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
-  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
-  attributes(keys: [String!]): [UserAttribute!]!
+  secrets: [SecretEntity!]
+  pwdAdmins: [PwdAdmin!]
 }
 
 type GenerateSecretResponse {
   secret: String!
   secretData: SecretEntity!
+}
+
+type UserResponse {
+  id: ID!
+  email: String!
+  nickname: String
+  name: String
+  birthdate: DateTime
+  phone: String
+  isActive: Boolean!
+  avatar: String
+  userRoles: [UserRole!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  secret: SecretEntity
+  pwdAdmin: PwdAdmin
+  roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
+  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
+  attributes(keys: [String!]): [UserAttribute!]!
 }
 
 type UserAttribute {
@@ -128,8 +137,8 @@ type ErrorDetail {
 
 type Query {
   secret: SecretEntity!
-  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [User!]!
-  user(id: ID!): User!
+  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
+  user(id: ID!): UserResponse!
   roles(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Role!]!
   role(id: ID!): Role!
   userAttributes(keys: [String!]): [UserAttribute!]!
@@ -141,8 +150,8 @@ type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
   expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
   removeSecret: Boolean!
-  updateUser(updateUserInput: UpdateUserInput!): User!
-  removeUser(id: ID!): User!
+  updateUser(updateUserInput: UpdateUserInput!): UserResponse!
+  removeUser(id: ID!): Boolean!
   createRole(createRoleInput: CreateRoleInput!): Role!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
   removeRole(id: ID!): Role!

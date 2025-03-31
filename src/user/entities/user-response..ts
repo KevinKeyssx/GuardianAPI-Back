@@ -5,12 +5,12 @@ import { SecretEntity } from '@secrets/entities/secret.entity';
 import { PwdAdmin }     from '@pwd-admin/entities/pwd-admin.entity';
 
 @ObjectType()
-export class User extends BasicUser {
+export class UserResponse extends BasicUser {
 
-    @Field(() => [SecretEntity], { nullable: true })
-    secrets?: SecretEntity[];
+    @Field(() => SecretEntity, { nullable: true })
+    secret?: SecretEntity;
 
-    @Field(() => [PwdAdmin], { nullable: true })
-    pwdAdmins?: PwdAdmin[];
+    @Field(() => PwdAdmin, { nullable: true })
+    pwdAdmin?: PwdAdmin;
 
 }

@@ -1,4 +1,3 @@
-
 import {
     BadRequestException,
     ForbiddenException,
@@ -13,7 +12,9 @@ import { PrismaClient } from '@prisma/client';
 
 import { PaginationArgs }   from '@common/dto/args/pagination.args';
 import { SearchArgs }       from '@common/dto/args/search.args';
+import { PrismaException }  from '@config/prisma-catch';
 import { UpdateUserInput }  from '@user/dto/update-user.input';
+import { UserResponse }     from '@user/entities/user-response.';
 import { User }             from '@user/entities/user.entity';
 
 
@@ -32,12 +33,6 @@ export class UserService implements OnModuleInit {
 	}
 
 
-    #where = () => ({
-        isDeleted   : false,
-        isActive    : true,
-    });
-
-
     #guardianIncludes = () => ({
         userRoles   : {
             include: {
@@ -47,17 +42,14 @@ export class UserService implements OnModuleInit {
         },
         pwdAdmins   : { where: { isActive: true }},
         secrets     : { take: 1 }
-        // attributes  : true,
-        // roles       : true,
-        // apiUser     : true,
-        // users       : true,
     });
 
-    #apiUserIncludes = () => ({
-        attributes  : true,
-        userRoles   : true,
-        pwdAdmins   : true,
-    });
+
+    #getUserResponse = ( user: User ): UserResponse => ({
+        ...user,
+        secret      : user.secrets?.[0] || null,
+        pwdAdmin    : user.pwdAdmins?.[0] || null,
+    }) as UserResponse;
 
 
     async #valid( userInput: UpdateUserInput ) {
@@ -90,26 +82,28 @@ export class UserService implements OnModuleInit {
     async findAll(
         currentUser: User,
         { page, each, field, orderBy }: PaginationArgs,
-        {search}: SearchArgs
-    ): Promise<User[]> {
-        return await this.prisma.user.findMany({
+        { search }: SearchArgs
+    ): Promise<UserResponse[]> {
+        const users = await this.prisma.user.findMany({
             take    : each,
             skip    : page,
             orderBy : { [field]: orderBy },
             include : this.#guardianIncludes(),
             where   : {
-                ...this.#where(),
-                apiUserId: currentUser.id,
+                isActive    : true,
+                apiUserId   : currentUser.id,
                 [field]: {
                     contains    : search,
                     mode        : 'insensitive',
                 }
             },
         }) as unknown as User[];
+
+        return users.map( user => this.#getUserResponse( user ));
     }
 
 
-    async findOne( currentUser: User, id: string ): Promise<User> {
+    async findOne( currentUser: User, id: string ): Promise<UserResponse> {
         if ( currentUser.id !== id && currentUser.apiUserId ) {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
         }
@@ -117,42 +111,49 @@ export class UserService implements OnModuleInit {
         const user = await this.prisma.user.findUnique({
             where: {
                 id,
-                ...this.#where()
+                isActive: true,
             },
             include: this.#guardianIncludes()
-        });
+        }) as unknown as User;
 
         if ( !user ) throw new NotFoundException( `User whit id ${id} not found.` );
         if ( user.apiUserId !== currentUser.id && !currentUser.apiUserId && id !== currentUser.id ) {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
         }
 
-        return user as unknown as User;
+        return this.#getUserResponse( user );
     }
 
 
     async update(
         currentUser: User,
         updateUserInput: UpdateUserInput
-    ): Promise<User> {
+    ): Promise<UserResponse> {
         await this.findOne( currentUser, updateUserInput.id );
         await this.#valid( updateUserInput );
 
-        return this.prisma.user.update({
-            where   : { id: updateUserInput.id },
-            data    : updateUserInput,
-            include : this.#guardianIncludes()
-        }) as unknown as User;
+        try {
+            const user = this.prisma.user.update({
+                where   : { id: updateUserInput.id },
+                data    : updateUserInput,
+                include : this.#guardianIncludes()
+            }) as unknown as User;
+
+            return this.#getUserResponse( user );
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'User' );
+        }
     }
 
 
-    async remove( currentUser: User, id: string ): Promise<User> {
+    async remove( currentUser: User, id: string ):  Promise<boolean> {
         await this.findOne( currentUser, id );
 
-        return await this.prisma.user.update({
-            where   : { id },
-            data    : { isDeleted: true }
-        }) as User;
+        try {
+            return await this.prisma.user.delete({ where: { id }}) !== null;
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'User' );
+        }
     }
 
 }

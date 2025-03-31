@@ -1,5 +1,14 @@
-import { ParseUUIDPipe, UseGuards }                                     from '@nestjs/common';
-import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent, Context }    from '@nestjs/graphql';
+import {
+    Resolver,
+    Query,
+    Mutation,
+    Args,
+    ID,
+    ResolveField,
+    Parent,
+    Context
+}                                   from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards } from '@nestjs/common';
 
 import { SecretAuthGuard }      from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }          from '@auth/decorators/current-user.decorator';
@@ -10,24 +19,25 @@ import { PaginationArgs }       from '@common/dto/args/pagination.args';
 import { UserService }          from '@user/user.service';
 import { UpdateUserInput }      from '@user/dto/update-user.input';
 import { User }                 from '@user/entities/user.entity';
+import { UserResponse }         from '@user/entities/user-response.';
 import { Role }                 from '@roles/entities/role.entity';
 import { RolesService }         from '@roles/roles.service';
 import { UserAttributeService } from '@user-attribute/user-attribute.service';
 import { UserAttribute }        from '@user-attribute/entities/user-attribute.entity';
 
 
-@Resolver( () => User )
+@Resolver( () => UserResponse )
 export class UserResolver {
 
     constructor(
-        private readonly userService    : UserService,
-        private readonly rolesService   : RolesService,
-        private readonly userAttributeService: UserAttributeService
+        private readonly userService            : UserService,
+        private readonly rolesService           : RolesService,
+        private readonly userAttributeService   : UserAttributeService
     ) {}
 
 
     @UseGuards( SecretAuthGuard( false ))
-    @Query(() => [User], { name: 'users' })
+    @Query(() => [UserResponse], { name: 'users' })
     findAll(
         @CurrentUser() user : User,
         @Args() search      : SearchArgs,
@@ -38,7 +48,7 @@ export class UserResolver {
 
 
     @UseGuards( SecretAuthGuard( true ))
-    @Query(() => User, { name: 'user' })
+    @Query(() => UserResponse, { name: 'user' })
     findOne(
         @CurrentUser() user: User,
         @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
@@ -50,7 +60,7 @@ export class UserResolver {
 
 
     @UseGuards( SecretAuthGuard( true ))
-    @Mutation( () => User )
+    @Mutation( () => UserResponse )
     updateUser(
         @CurrentUser() user: User,
         @Args( 'updateUserInput' ) updateUserInput: UpdateUserInput
@@ -60,7 +70,7 @@ export class UserResolver {
 
 
     @UseGuards( SecretAuthGuard( true ))
-    @Mutation( () => User )
+    @Mutation( () => Boolean )
     removeUser(
         @CurrentUser() user: User,
         @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string
@@ -88,7 +98,7 @@ export class UserResolver {
     }
 
 
-    @ResolveField( () => [User], {
+    @ResolveField( () => [UserResponse], {
         name        : 'users',
         middleware  : [ hideUserMiddleware ]
     })
