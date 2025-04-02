@@ -51,46 +51,64 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         let roleId  : string    | null = null;
         let user    : User      | null = null;
 
-        if ( apiUserId ) user = await this.user.findUnique({ where: { id: apiUserId }}) as User;
-
-        if ( role ) {
-            const existRole = await this.role.findFirst({
-                where: {
-                    name    : role,
-                    userId  : user?.id
-                }
-            });
-
-            if ( !existRole ) throw new NotFoundException( `Role ${role} not found.` );
-            if ( existRole.name === ENVS.ROLE_SECRET && apiUserId ) {
-                throw new BadRequestException( 'Not allowed to create user.' );
-            }
-
-            roleId = existRole.id;
-        }
-
         try {
-            const newUser = await this.user.create({
-                data: {
-                    email,
-                    apiUserId,
-                    ...( role && roleId ) && { userRoles: { create: { roleId }}},
-                },
-                select: {
-                    id          : true,
-                    email       : true,
-                    createdAt   : true
-                }
-            });
+            if ( apiUserId ) {
+                user = await this.user.findUnique({
+                    where   : { id: apiUserId },
+                    include : { plan: true },
+                }) as User;
 
-            if ( password ) {
-                await this.pwdAdmin.create({
-                    data: {
-                        password: bcrypt.hashSync( password, 10 ),
-                        userId  : newUser.id
+                if ( !user || !user.plan ) throw new NotFoundException('User or plan not found.');
+
+                const userCount = await this.user.count({ where: { apiUserId }});
+
+                if (userCount >= user.plan.maxUsers) throw new BadRequestException('Maximum users reached.');
+            } 
+
+            if ( role ) {
+                const existRole = await this.role.findFirst({
+                    where: {
+                        name    : role,
+                        userId  : user?.id
                     }
                 });
+
+                if ( !existRole ) throw new NotFoundException( `Role ${role} not found.` );
+                if ( existRole.name === ENVS.ROLE_SECRET && apiUserId ) {
+                    throw new BadRequestException( 'Not allowed to create user.' );
+                }
+
+                roleId = existRole.id;
             }
+
+            const planId = ENVS.FREE_PLAN_ID;
+
+            const newUser = await this.$transaction( async ( prisma ) => {
+                const userTransaction = await prisma.user.create({
+                    data: {
+                        email,
+                        apiUserId,
+                        ...( role && roleId ) && { userRoles: { create: { roleId }}},
+                        planId
+                    },
+                    select: {
+                        id          : true,
+                        email       : true,
+                        createdAt   : true
+                    }
+                });
+
+                if ( password ) {
+                    await prisma.pwdAdmin.create({
+                        data: {
+                            password: bcrypt.hashSync( password, 10 ),
+                            userId  : userTransaction.id
+                        }
+                    });
+                }
+
+                return userTransaction;
+            });
 
             return {
                 token   : this.#getJwtToken( newUser.id ),

@@ -4,6 +4,7 @@ import { Role }             from '@roles/entities/role.entity';
 import { UserAttribute }    from '@user-attribute/entities/user-attribute.entity';
 import { UserRole }         from '@user-roles/entities/user-role.entity';
 import { User }             from '@user/entities/user.entity';
+import { Plan }             from '@user/entities/plan.entity';
 
 @ObjectType()
 export class BasicUser {
@@ -37,6 +38,9 @@ export class BasicUser {
     users?: User[];
     roles?: Role[];
     attributes?: UserAttribute[];
+
+    planId?: string;
+    plan?: Plan;
 
     @Field(() => [UserRole], { nullable: true })
     userRoles?: UserRole[];
