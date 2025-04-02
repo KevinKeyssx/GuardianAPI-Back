@@ -13,6 +13,7 @@ interface EnvVars {
     SOCIAL_GITHUB_AUTH      : string;
     SOCIAL_X_AUTH           : string;
     SOCIAL_TWITCH_AUTH      : string;
+    FREE_PLAN_ID            : string;
 }
 
 
@@ -27,6 +28,7 @@ const envsSchema = joi.object({
     SOCIAL_GITHUB_AUTH      : joi.string().required(),
     SOCIAL_X_AUTH           : joi.string().required(),
     SOCIAL_TWITCH_AUTH      : joi.string().required(),
+    FREE_PLAN_ID            : joi.string().required(),
 })
 .unknown( true );
 
@@ -51,4 +53,5 @@ export const ENVS = {
     SOCIAL_GITHUB_AUTH      : envVars.SOCIAL_GITHUB_AUTH,
     SOCIAL_X_AUTH           : envVars.SOCIAL_X_AUTH,
     SOCIAL_TWITCH_AUTH      : envVars.SOCIAL_TWITCH_AUTH,
+    FREE_PLAN_ID            : envVars.FREE_PLAN_ID,
 }
