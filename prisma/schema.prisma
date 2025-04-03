@@ -110,8 +110,6 @@ model UserRole {
     role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
     roleId     String
 
-    version     Int       @default(0)
-
     @@index([userId, roleId, isActive])
     @@unique([userId, roleId])
 }
