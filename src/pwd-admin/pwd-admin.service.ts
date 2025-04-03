@@ -11,7 +11,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { PrismaClient, PwdAdmin }   from '@prisma/client';
-import * as bcrypt                  from 'bcryptjs';
+import * as argon2                  from 'argon2';
 
 import { UpdatePwdAdminInput }  from '@pwd-admin/dto/update-pwd-admin.input';
 import { UpdatePwdInput }       from '@pwd-admin/dto/update-pwd.input';
@@ -46,7 +46,7 @@ export class PwdAdminService implements OnModuleInit {
             }
         });
 
-        if ( !pwd )                             throw new NotFoundException( `Guardian not found.` );
+        if ( !pwd )                             throw new NotFoundException( 'Guardian not found.' );
         if ( pwd.user.id !== currentUser.id )   throw new ForbiddenException( 'You are not authorized to update this Pwd' );
 
         const willExpires = new Date();
@@ -103,11 +103,15 @@ export class PwdAdminService implements OnModuleInit {
         if ( lastActivePwd.userId !== currentUser.id )
             throw new ForbiddenException( 'You are not authorized to update this password' );
 
-        if ( !bcrypt.compareSync( currentPassword, lastActivePwd.password ))
-            throw new BadRequestException( 'Invalid credentials.' );
+        const isPasswordValid = await argon2.verify( lastActivePwd.password, currentPassword );
+        if ( !isPasswordValid ) throw new BadRequestException( 'Invalid credentials.' );
 
         if ( pwds.length > 0 && lastActivePwd.isGuardian ) {
-            if (pwds.some(({ password: pwd }) => bcrypt.compareSync(newPassword, pwd))) {
+            const passwordMatches = await Promise.all(
+                pwds.map(({ password: pwd }) => argon2.verify( pwd, newPassword ))
+            );
+
+            if (passwordMatches.some( match => match )) {
                 throw new BadRequestException('The new password cannot be the same as any of the last 5');
             }
         }
@@ -127,14 +131,14 @@ export class PwdAdminService implements OnModuleInit {
 
             if ( pwds.length === 5 ) await prisma.pwdAdmin.delete({ where: { id: pwds[0].id }});
 
-            const willExpires = lastActivePwd.isGuardian
-                ? new Date( new Date().setDate( new Date().getDate() + lastActivePwd.howOften! ))
+            const willExpires = lastActivePwd.isGuardian && lastActivePwd.howOften
+                ? new Date( new Date().setDate(new Date().getDate() + lastActivePwd.howOften ))
                 : null;
 
             return prisma.pwdAdmin.create({
                 data: {
-                    user            : { connect: { id: currentUser.id } },
-                    password        : bcrypt.hashSync(newPassword, 10),
+                    user            : { connect: { id: currentUser.id }},
+                    password        : await argon2.hash( newPassword ),
                     howOften        : lastActivePwd.howOften,
                     alertDay        : lastActivePwd.alertDay,
                     willExpireAt    : willExpires,

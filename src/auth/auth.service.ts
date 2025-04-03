@@ -9,7 +9,7 @@ import {
 import { JwtService }   from '@nestjs/jwt';
 
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt      from 'bcryptjs';
+import * as argon2      from 'argon2';
 
 import { SignUpDto }            from '@auth/dto/signup.dto';
 import { AuthResponse }         from '@auth/types/auth-response.type';
@@ -81,15 +81,13 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 roleId = existRole.id;
             }
 
-            const planId = ENVS.FREE_PLAN_ID;
-
             const newUser = await this.$transaction( async ( prisma ) => {
                 const userTransaction = await prisma.user.create({
                     data: {
                         email,
                         apiUserId,
                         ...( role && roleId ) && { userRoles: { create: { roleId }}},
-                        planId
+                        ...( !apiUserId && { planId: ENVS.FREE_PLAN_ID })
                     },
                     select: {
                         id          : true,
@@ -101,7 +99,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 if ( password ) {
                     await prisma.pwdAdmin.create({
                         data: {
-                            password: bcrypt.hashSync( password, 10 ),
+                            password: await argon2.hash( password ),
                             userId  : userTransaction.id
                         }
                     });
@@ -134,8 +132,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
         if ( !pwdAdmin ) throw new UnauthorizedException( 'Invalid credentials.' );
 
-        if ( !bcrypt.compareSync( password, pwdAdmin.password ))
-            throw new UnauthorizedException( 'Invalid credentials.' );
+        const isPasswordValid = await argon2.verify( pwdAdmin.password, password );
+        if ( !isPasswordValid ) throw new UnauthorizedException( 'Invalid credentials.' );
 
         const { apiUserId, version, ...rest } = user;
 
