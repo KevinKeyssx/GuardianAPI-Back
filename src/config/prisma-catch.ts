@@ -1,8 +1,11 @@
 import {
     BadRequestException,
+    ForbiddenException,
     InternalServerErrorException,
     Logger,
-    NotFoundException
+    NotFoundException,
+    UnauthorizedException,
+    UnprocessableEntityException
 } from '@nestjs/common';
 
 
@@ -20,6 +23,33 @@ export class PrismaException {
     static readonly #logger = new Logger( PrismaException.name );
 
     static catch( exception: any, message?: string ) {
+        const response = exception?.response?.message || 'Unknown error';
+
+        if ( exception.status === 400 ) {
+            this.#logger.error( response );
+            throw new BadRequestException( response );
+        }
+
+        if ( exception.status === 401 ) {
+            this.#logger.error( response );
+            throw new UnauthorizedException( response );
+        }
+
+        if ( exception.status === 403 ) {
+            this.#logger.error( response );
+            throw new ForbiddenException( response );
+        }
+
+        if ( exception.status === 404 ) {
+            this.#logger.error( response );
+            throw new NotFoundException( response );
+        }
+
+        if ( exception.status === 422 ) {
+            this.#logger.error( response );
+            throw new UnprocessableEntityException( response );
+        }
+
         if (exception.code === ERROR_MESSAGES.ALREADY_EXISTS) {
             this.#logger.error(`${message ?? exception.meta.target} already exists.`);
             throw new BadRequestException( `${ message ?? exception.meta.target} already exists.` );
