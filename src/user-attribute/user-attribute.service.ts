@@ -114,13 +114,17 @@ export class UserAttributeService implements OnModuleInit {
         currentUser: User,
         updateUserAttributeInput: UpdateUserAttributeInput
     ): Promise<UserAttribute> {
-        await this.findOne( currentUser, updateUserAttributeInput.id );
+        const userAttribute = await this.findOne( currentUser, updateUserAttributeInput.id );
 
         return await this.prisma.userAttribute.update({
             where: {
-                id: updateUserAttributeInput.id
+                id: updateUserAttributeInput.id,
+                version: userAttribute.version
             },
-            data: updateUserAttributeInput
+            data: {
+                ...updateUserAttributeInput,
+                version: userAttribute.version + 1
+            }
         });
     }
 
@@ -185,10 +189,12 @@ export class UserAttributeService implements OnModuleInit {
 
         await this.prisma.userAttribute.update({
             where: {
-                id: updateUserAttributeInput.id
+                id      : updateUserAttributeInput.id,
+                version : userAttribute.version
             },
             data: {
-                value: updateUserAttributeInput.value
+                value   : updateUserAttributeInput.value,
+                version : userAttribute.version + 1
             }
         });
 

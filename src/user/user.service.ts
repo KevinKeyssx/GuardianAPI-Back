@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     ForbiddenException,
     Inject,
     Injectable,
@@ -52,33 +51,6 @@ export class UserService implements OnModuleInit {
     }) as UserResponse;
 
 
-    async #valid( userInput: UpdateUserInput ) {
-        if ( userInput.email ) {
-            const email = await this.prisma.user.findUnique({
-                where: {
-                    email: userInput.email
-                }
-            });
-
-            if ( email !== null ) {
-                throw new BadRequestException( 'Email already exists.' );
-            }
-        }
-
-        if ( userInput.nickname ) {
-            const nickname = await this.prisma.user.findUnique({
-                where: {
-                    nickname: userInput.nickname
-                }
-            });
-
-            if ( nickname !== null ) {
-                throw new BadRequestException( 'Nickname already exists.' );
-            }
-        }
-    }
-
-
     async findAll(
         currentUser: User,
         { page, each, field, orderBy }: PaginationArgs,
@@ -129,15 +101,17 @@ export class UserService implements OnModuleInit {
         currentUser: User,
         updateUserInput: UpdateUserInput
     ): Promise<UserResponse> {
-        await this.findOne( currentUser, updateUserInput.id );
-        await this.#valid( updateUserInput );
+        const existingUser = await this.findOne( currentUser, updateUserInput.id );
 
         try {
-            const user = this.prisma.user.update({
-                where   : { id: updateUserInput.id },
-                data    : updateUserInput,
-                include : this.#guardianIncludes()
-            }) as unknown as User;
+            const user = await this.prisma.user.update({
+                where   : { id: updateUserInput.id, version: existingUser.version },
+                data    : {
+                    ...updateUserInput,
+                    version: existingUser.version + 1,
+                },
+                include: this.#guardianIncludes()
+            }) as User;
 
             return this.#getUserResponse( user );
         } catch ( error ) {
