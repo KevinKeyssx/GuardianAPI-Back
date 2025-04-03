@@ -6,6 +6,7 @@ export class Plan {
     name            : string;
     maxUsers        : number;
     maxAttributes   : number;
+    maxRoles        : number;
     monthlyPrice    : number;
     yearlyPrice     : number;
     discount        : number;

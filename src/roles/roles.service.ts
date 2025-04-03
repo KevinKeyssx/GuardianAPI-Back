@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Inject,
     Injectable,
     NotFoundException,
@@ -32,6 +33,11 @@ export class RolesService implements OnModuleInit {
         createRoleInput : CreateRoleInput
     ): Promise<Role> {
         try {
+            const userCount = await this.prisma.user.count({ where: { apiUserId: currentUser.apiUserId }});
+
+            if ( userCount >= currentUser.plan!.maxRoles )
+                throw new BadRequestException( 'Maximum roles reached.' );
+
             return await this.prisma.role.create({
                 data: {
                     ...createRoleInput,

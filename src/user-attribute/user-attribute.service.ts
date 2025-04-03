@@ -35,12 +35,17 @@ export class UserAttributeService implements OnModuleInit {
 	}
 
 
-    async #validPermissions( userId: string, currentUser: User ): Promise<void> {
-        const user = await this.prisma.user.findUnique({ where: { id: userId }});
+    async #validPermissions( userId: string, currentUser: User ): Promise<User> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { plan: true}
+        });
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
         if ( user.apiUserId !== currentUser.id && user.id !== currentUser.id )
             throw new ForbiddenException( 'You do not have permission to this attribute' );
+
+        return user as User;
     }
 
 
@@ -48,7 +53,11 @@ export class UserAttributeService implements OnModuleInit {
         currentUser             : User,
         createUserAttributeInput: CreateUserAttributeInput
     ): Promise<UserAttribute> {
-        await this.#validPermissions( createUserAttributeInput.userId, currentUser );
+        const user      = await this.#validPermissions( createUserAttributeInput.userId, currentUser );
+        const userCount = await this.prisma.user.count({ where: { apiUserId: user.apiUserId }});
+
+        if ( userCount >= user.plan!.maxAttributes )
+            throw new BadRequestException( 'Maximum attributes reached.' );
 
         try {
             return await this.prisma.userAttribute.create({
