@@ -45,6 +45,8 @@ export class BasicUser {
     @Field(() => [UserRole], { nullable: true })
     userRoles?: UserRole[];
 
+    version: number;
+
     @Field(() => Date)
     createdAt: Date;
 
