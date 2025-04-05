@@ -120,6 +120,14 @@ enum AttributeType {
   UUID
 }
 
+type ValidateUser {
+  valid: Boolean!
+  user: UserResponse
+  token: String
+  message: String!
+  errorCode: String
+}
+
 type ValueAttribute {
   value: JSON
 }
@@ -139,6 +147,7 @@ type Query {
   secret: SecretEntity!
   users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
   user(id: ID!): UserResponse!
+  validateToken(token: String!, refresh: Boolean = false): ValidateUser!
   roles(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Role!]!
   role(id: ID!): Role!
   userAttributes(keys: [String!]): [UserAttribute!]!

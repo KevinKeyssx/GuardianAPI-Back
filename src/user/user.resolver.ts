@@ -7,8 +7,11 @@ import {
     ResolveField,
     Parent,
     Context
-}                                   from '@nestjs/graphql';
-import { ParseUUIDPipe, UseGuards } from '@nestjs/common';
+}                                           from '@nestjs/graphql';
+import { Inject, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { JwtService }                       from '@nestjs/jwt';
+
+// import Redis from 'ioredis';
 
 import { SecretAuthGuard }      from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }          from '@auth/decorators/current-user.decorator';
@@ -24,6 +27,8 @@ import { Role }                 from '@roles/entities/role.entity';
 import { RolesService }         from '@roles/roles.service';
 import { UserAttributeService } from '@user-attribute/user-attribute.service';
 import { UserAttribute }        from '@user-attribute/entities/user-attribute.entity';
+import { ValidateUser }         from '@user/entities/validate-user';
+import { ValidateTokenArgs }    from '@user/dto/validate-token.args';
 
 
 @Resolver( () => UserResponse )
@@ -32,7 +37,10 @@ export class UserResolver {
     constructor(
         private readonly userService            : UserService,
         private readonly rolesService           : RolesService,
-        private readonly userAttributeService   : UserAttributeService
+        private readonly userAttributeService   : UserAttributeService,
+        private readonly jwtService: JwtService,
+
+        // @Inject('REDIS') private readonly redis: Redis
     ) {}
 
 
@@ -118,6 +126,65 @@ export class UserResolver {
         @Args() attributes  : AttributesArgs
     ) {
         return this.userAttributeService.findAll( user, context.userId, attributes );
+    }
+
+
+    @UseGuards( SecretAuthGuard( true ))
+    @Query(() => ValidateUser, { name: 'validateToken' })
+    async validateToken(
+        @CurrentUser() currentUser: User,
+        @Context() context: any,
+        @Args() args: ValidateTokenArgs
+    ): Promise<ValidateUser> {
+        // const isRevoked = await this.redis.get(`revoked:${token}`);
+
+        // if ( isRevoked ) {
+        //     return {
+        //         valid       : false,
+        //         user        : undefined,
+        //         message     : 'Token has been revoked',
+        //         errorCode   : 'TOKEN_REVOKED',
+        //     };
+        // }
+
+        const payload = this.jwtService.verify( args.token );
+
+        if ( !payload.id ) {
+            return {
+                valid       : false,
+                user        : undefined,
+                token       : undefined,
+                message     : 'Invalid token payload',
+                errorCode   : 'INVALID_PAYLOAD',
+            };
+        }
+
+        context.userId = currentUser.id;
+
+        const user = await this.userService.findOne( currentUser, currentUser.id);
+
+        let responseToken = args.token;
+
+        if ( args.refresh ) {
+            // const expiresIn = payload.exp - Math.floor(Date.now() / 1000); // Segundos restantes
+            // if ( expiresIn > 0 ) {
+            //     await this.redis.set(`revoked:${args.token}`, 'true', 'EX', expiresIn);
+            // }
+
+            responseToken = this.#getJwtToken(user.id);
+        }
+
+        return {
+            valid       : true,
+            user        : user,
+            token       : responseToken,
+            message     : args.refresh ? 'Token refreshed successfully' : 'Token is valid',
+            errorCode   : undefined,
+        };
+    }
+
+    #getJwtToken( userId: string ) {
+        return this.jwtService.sign({ id: userId }, { expiresIn: '4h' });
     }
 
 }
