@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, Req, BadRequestException } from '@nestjs/common';
 
 import { AuthService }      from '@auth/auth.service';
 import { SignUpDto }        from '@auth/dto/signup.dto';
@@ -50,6 +50,20 @@ export class AuthController {
         @Body() socialSigninDto: SocialSigninDto
     ) {
         return this.authService.signInSocial( socialSigninDto );
+    }
+
+
+    @HttpCode( HttpStatus.OK )
+    @Post('logout')
+    @UseGuards( AuthGuard )
+    async logout(
+        @Req() request: Request
+    ) {
+        const token = request['token'];
+
+        await this.authService.logout(token);
+
+        return { message: 'Logged out successfully' };
     }
 
 }

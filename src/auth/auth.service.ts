@@ -10,6 +10,7 @@ import { JwtService }   from '@nestjs/jwt';
 
 import { PrismaClient } from '@prisma/client';
 import * as argon2      from 'argon2';
+import Redis            from 'ioredis';
 
 import { SignUpDto }            from '@auth/dto/signup.dto';
 import { AuthResponse }         from '@auth/types/auth-response.type';
@@ -25,14 +26,34 @@ import { User }                 from '@user/entities/user.entity';
 @Injectable()
 export class AuthService extends PrismaClient implements OnModuleInit {
 
+    readonly #redis: Redis;
+    #logger = new Logger( AuthService.name );
+
+
     constructor(
         private readonly jwtService : JwtService,
         private readonly social     : SocialService
     ) {
         super();
+
+        // this.#redis = new Redis({
+        //     host        : ENVS.REDIS_HOST,
+        //     port        : ENVS.REDIS_PORT,
+        //     password    : ENVS.REDIS_PASSWORD
+        // });
+
+        // this.#redis.on('connect', () => {
+        //     this.#logger.log('***Connected to REDIS***');
+        // });
+    
+        // this.#redis.on('error', (err) => {
+        //     this.#logger.error('Redis connection failed:', err);
+        // });
+    
+        // // Log del objeto Redis (para inspección)
+        // this.#logger.log('Redis instance initialized:', this.#redis);
     }
 
-    #logger = new Logger( AuthService.name );
 
     onModuleInit() {
 		this.$connect();
@@ -123,6 +144,17 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
 
+        // const attemptsKey = `login_attempts:${user.id}`;
+        // const lockKey = `lock:${user.id}`;
+        // const maxAttempts = 5;
+        // const lockDuration = 15 * 60;
+
+        // const lockedUntil = await this.redis.get(lockKey);
+        // if (lockedUntil && parseInt(lockedUntil) > Date.now()) {
+        //     const minutesLeft = Math.ceil((parseInt(lockedUntil) - Date.now()) / 60000);
+        //     throw new UnauthorizedException(`Account locked. Try again in ${minutesLeft} minutes.`);
+        // }
+
         const pwdAdmin = await this.pwdAdmin.findFirst({
             where: {
                 userId      : user.id,
@@ -134,6 +166,21 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
         const isPasswordValid = await argon2.verify( pwdAdmin.password, password );
         if ( !isPasswordValid ) throw new UnauthorizedException( 'Invalid credentials.' );
+
+        // if (!isPasswordValid) {
+        //     const attempts = parseInt(await this.redis.get(attemptsKey) || '0') + 1;
+        //     await this.redis.set(attemptsKey, attempts, 'EX', lockDuration);
+
+        //     if (attempts >= maxAttempts) {
+        //         const lockTime = Date.now() + lockDuration * 1000;
+        //         await this.redis.set(lockKey, lockTime, 'EX', lockDuration);
+        //         throw new UnauthorizedException('Too many failed attempts. Account locked for 15 minutes.');
+        //     }
+        //     throw new UnauthorizedException('Invalid credentials.');
+        // }
+
+        // await this.redis.del(attemptsKey);
+        // await this.redis.del(lockKey);
 
         const { apiUserId, version, ...rest } = user;
 
@@ -168,6 +215,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     }
 
 
+    // TODO: Implementar validación por token
+    // TODO: Implementar un ratelimit con redis
+    // TODO: Implementar un logout con redis
     revalidateToken = async ( user: User ) : Promise<AuthResponse> => ({
         token: this.#getJwtToken( user.id ),
         user
@@ -198,6 +248,24 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             } as AuthResponse;
         } catch ( error ) {
             throw new UnauthorizedException( 'Invalid access token' );
+        }
+    }
+
+
+    async logout(token: string): Promise<void> {
+        try {
+            const payload = this.jwtService.decode(token) as { exp: number; id: string } | null;
+
+            if (!payload || !payload.exp) {
+                return; // Token inválido o sin expiración, no hacemos nada
+            }
+
+            // const expiresIn = payload.exp - Math.floor(Date.now() / 1000);
+            // if (expiresIn > 0) {
+            //     await this.redis.set(`revoked:${token}`, 'true', 'EX', expiresIn);
+            // }
+        } catch (error) {
+            console.warn(`Failed to revoke token: ${error.message}`);
         }
     }
 
