@@ -139,8 +139,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async signIn({ email, password }: SignUpDto ) : Promise<AuthResponse> {
-        const user = await this.user.findUnique({ where: { email }});
+    async signIn({ email, password, apiUserId }: SignUpDto ) : Promise<AuthResponse> {
+        const user = await this.user.findFirst({ where: { email, apiUserId }});
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
 
@@ -182,7 +182,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         // await this.redis.del(attemptsKey);
         // await this.redis.del(lockKey);
 
-        const { apiUserId, version, ...rest } = user;
+        const { apiUserId: api, version, ...rest } = user;
 
         return {
             token   : this.#getJwtToken( user.id ),
@@ -236,7 +236,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
             }[provider];
 
-            const user = await this.user.findUnique({ where: { email: userInfo.email }});
+            const user = await this.user.findFirst({ where: { email: userInfo.email, apiUserId }});
 
             if ( !user ) return await this.signUp({ role, apiUserId, email: userInfo.email });
 
