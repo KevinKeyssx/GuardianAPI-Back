@@ -52,8 +52,8 @@ model Plan {
 
 model User {
     id          String      @id @default(uuid())
-    email       String      @unique
-    nickname    String?     @unique
+    email       String
+    nickname    String?
     name        String?
     birthdate   DateTime?
     isActive    Boolean     @default(true)
@@ -79,6 +79,7 @@ model User {
     version     Int       @default(0)
 
     @@index([isActive, apiUserId, email])
+    @@unique([email, nickname, apiUserId])
 }
 
 model Role {
