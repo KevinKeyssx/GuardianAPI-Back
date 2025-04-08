@@ -143,6 +143,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         const user = await this.user.findFirst({ where: { email, apiUserId }});
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
+        if ( !user.isVerified ) throw new UnauthorizedException( 'User not verified.' );
 
         // const attemptsKey = `login_attempts:${user.id}`;
         // const lockKey = `lock:${user.id}`;
@@ -205,6 +206,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         });
 
         if ( !user ) throw new UnauthorizedException( 'Unauthorized user.' );
+        if ( !user.isVerified ) throw new UnauthorizedException( 'User not verified.' );
 
         return {
             ...user,

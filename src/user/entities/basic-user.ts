@@ -46,6 +46,7 @@ export class BasicUser {
     userRoles?: UserRole[];
 
     version: number;
+    isVerified: boolean;
 
     @Field(() => Date)
     createdAt: Date;
