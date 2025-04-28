@@ -80,14 +80,10 @@ export class SecretsService implements OnModuleInit {
         createSecretInput   : CreateSecretInput
     ): Promise<GenerateSecretResponse> {
         try {
-            await this.prisma.secret.deleteMany({
-                where: {
-                    apiUserId: currentUser.id,
-                }
-            });
+            await this.prisma.secret.deleteMany({ where: { apiUserId: currentUser.id }});
 
             const secret        = this.#generateSecret();
-            const secretHash    = this.#generateSecretHash(currentUser.id, secret);
+            const secretHash    = this.#generateSecretHash( currentUser.id, secret );
             const createdSecret = await this.prisma.secret.create({
                 data: {
                     willExpireAt   : createSecretInput.willExpireAt,
@@ -98,15 +94,14 @@ export class SecretsService implements OnModuleInit {
 
             const secretData: SecretEntity = {
                 ...createdSecret,
-                willExpireAt    : createdSecret.willExpireAt ?? undefined,
-                expiresAt       : createdSecret.expiresAt ?? undefined,
-            };
+                willExpireAt    : createdSecret.willExpireAt    ?? undefined,
+                expiresAt       : createdSecret.expiresAt       ?? undefined,
+            }
 
             return {
                 secret,
                 secretData
-            };
-
+            }
         } catch ( error ) {
             throw PrismaException.catch( error, 'Secret' );
         }
@@ -114,14 +109,14 @@ export class SecretsService implements OnModuleInit {
 
 
     async updateExpiresAt(
-        currentUser     : User,
-        { willExpireAt }   : UpdateSecretInput
+        currentUser         : User,
+        { willExpireAt }    : UpdateSecretInput
     ): Promise<Secret> {
         try {
             const secret = await this.prisma.secret.findFirst({
                 select: {
-                    id: true,
-                    version: true
+                    id      : true,
+                    version : true
                 },
                 where: {
                     apiUserId   : currentUser.id,
