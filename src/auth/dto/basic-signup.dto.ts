@@ -44,4 +44,34 @@ export class BasicSignUpDto {
     @IsUUID()
     apiUserId?: string;
 
+    @ApiProperty({
+        example     : '@JohnDoe',
+        description : 'The nickname of the user',
+        required    : false
+    })
+    @IsOptional()
+    @IsString()
+    @Length( 1, 100 )
+    nickname?: string;
+
+    @ApiProperty({
+        example     : 'https://example.com/12345678-1234-1234-1234-123456789012.png',
+        description : 'The avatar of the user',
+        required    : false
+    })
+    @IsOptional()
+    @IsString()
+    @Length( 1, 255 )
+    avatar?: string;
+
+    @ApiProperty({
+        example     : 'John Doe',
+        description : 'The name of the user',
+        required    : false
+    })
+    @IsOptional()
+    @IsString()
+    @Length( 1, 100 )
+    name?: string;
+
 }
