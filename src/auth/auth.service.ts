@@ -21,6 +21,7 @@ import { SocialService }        from '@auth/services/Social.services';
 import { ENVS }                 from '@config/envs';
 import { PrismaException }      from '@config/prisma-catch';
 import { User }                 from '@user/entities/user.entity';
+import { GitHubAuthService } from './services/github/github-auth.service';
 
 
 @Injectable()
@@ -229,14 +230,20 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     async signInSocial(
         { provider, accessToken, role, apiUserId }: SocialSigninDto
     ): Promise<AuthResponse> {
+        console.log('🚀 ~ file: auth.service.ts:231 ~ provider:', provider)
+        console.log('🚀 ~ file: auth.service.ts:231 ~ accessToken:', accessToken)
         try {
-            const userInfo = {
-                [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
-                [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
-                [SocialSigninProvider.GITHUB]    : await this.social.verifyGitHubToken( accessToken ),
-                [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
-                [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
-            }[provider];
+            // const userInfo = {
+            //     [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
+            //     [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
+            //     [SocialSigninProvider.GITHUB]    : await this.social.verifyGitHubToken( accessToken ),
+            //     [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
+            //     [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
+            // }[provider];
+            // const userInfo = await this.social.verifyGitHubToken( accessToken )
+            const userInfo = await GitHubAuthService.verifyGitHubToken( accessToken )
+            console.log('🚀 ~ file: auth.service.ts:235 ~ userInfo:', userInfo)
+
 
             const user = await this.user.findFirst({ where: { email: userInfo.email, apiUserId }});
 
@@ -249,7 +256,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 user    : rest
             } as AuthResponse;
         } catch ( error ) {
-            throw new UnauthorizedException( 'Invalid access token' );
+            throw new UnauthorizedException( error.message );
         }
     }
 
