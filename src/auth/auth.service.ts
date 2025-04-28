@@ -68,7 +68,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
 
     async signUp(
-        { role, apiUserId, email, password }: SignUpDto | PasswordDto
+        { role, apiUserId, email, password, nickname, avatar, name }: SignUpDto | PasswordDto,
+        isVerified: boolean = false
     ): Promise<AuthResponse> {
         let roleId  : string    | null = null;
         let user    : User      | null = null;
@@ -80,12 +81,12 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                     include : { plan: true },
                 }) as User;
 
-                if ( !user || !user.plan ) throw new NotFoundException('User or plan not found.');
+                if ( !user || !user.plan ) throw new NotFoundException( 'User or plan not found.' );
 
                 const userCount = await this.user.count({ where: { apiUserId }});
 
-                if (userCount >= user.plan.maxUsers) throw new BadRequestException('Maximum users reached.');
-            } 
+                if ( userCount >= user.plan.maxUsers ) throw new BadRequestException( 'Maximum users reached.' );
+            }
 
             if ( role ) {
                 const existRole = await this.role.findFirst({
@@ -108,6 +109,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                     data: {
                         email,
                         apiUserId,
+                        nickname,
+                        avatar,
+                        name,
+                        isVerified,
                         ...( role && roleId ) && { userRoles: { create: { roleId }}},
                         ...( !apiUserId && { planId: ENVS.FREE_PLAN_ID })
                     },
@@ -233,21 +238,21 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         console.log('🚀 ~ file: auth.service.ts:231 ~ provider:', provider)
         console.log('🚀 ~ file: auth.service.ts:231 ~ accessToken:', accessToken)
         try {
-            // const userInfo = {
-            //     [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
-            //     [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
-            //     [SocialSigninProvider.GITHUB]    : await this.social.verifyGitHubToken( accessToken ),
-            //     [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
-            //     [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
-            // }[provider];
+            const userInfo = {
+                [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
+                [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
+                [SocialSigninProvider.GITHUB]    : await GitHubAuthService.verifyGitHubToken( accessToken ),
+                [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
+                [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
+            }[provider];
             // const userInfo = await this.social.verifyGitHubToken( accessToken )
-            const userInfo = await GitHubAuthService.verifyGitHubToken( accessToken )
+            // const userInfo = await GitHubAuthService.verifyGitHubToken( accessToken )
             console.log('🚀 ~ file: auth.service.ts:235 ~ userInfo:', userInfo)
-
 
             const user = await this.user.findFirst({ where: { email: userInfo.email, apiUserId }});
 
-            if ( !user ) return await this.signUp({ role, apiUserId, email: userInfo.email });
+            // if ( !user ) return await this.signUp({ role, apiUserId, email: userInfo.email });
+            if ( !user ) return await this.signUp( userInfo, true );
 
             const { apiUserId: api, ...rest } = user;
 
