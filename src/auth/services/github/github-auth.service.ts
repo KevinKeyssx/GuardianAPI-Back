@@ -4,6 +4,7 @@ import { validateGitHubToken, ValidationError } from 'validate-github-token';
 
 import { GitHubModel, GitHubUser }  from './github.model';
 import { ENVS }                     from '@config/envs';
+import { SocialSignupModel }        from '@auth/services/models/social-signup.model';
 
 
 @Injectable()
@@ -46,7 +47,7 @@ export class GitHubAuthService {
         return email;
     }
 
-    static async verifyGitHubToken( accessToken: string ): Promise<{ email: string }> {
+    static async verifyGitHubToken( accessToken: string ): Promise<SocialSignupModel> {
         // const cached = this.cache.get<{ email: string }>(accessToken);
 
         // if (cached) {
@@ -73,7 +74,7 @@ export class GitHubAuthService {
             // this.cache.set(accessToken, { email });
             // const token = this.jwtService.sign({ email, provider: 'GitHub' });
 
-            return { email };
+            return { email, nickname: data.login, avatar: data.avatar_url } as SocialSignupModel;
         } catch ( error ) {
             if ( error instanceof ValidationError ) {
                 throw new UnauthorizedException( `GitHub token validation failed: ${error.message}` );
