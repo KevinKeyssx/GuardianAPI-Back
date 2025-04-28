@@ -27,15 +27,6 @@ export class SocialService {
     }
 
 
-    async verifyGitHubToken( accessToken: string ) {
-        return await this.#verifyToken(
-            accessToken,
-            ENVS.SOCIAL_GITHUB_AUTH,
-            SocialSigninProvider.GITHUB
-        );
-    }
-
-
     async verifyXToken( accessToken: string ) {
         return await this.#verifyToken(
             accessToken,
@@ -63,9 +54,15 @@ export class SocialService {
             const response = await fetch( url, {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
+            console.log('🚀 ~ file: Social.services.ts:65 ~ response:', response)
 
             if ( !response.ok ) {
                 throw new UnauthorizedException( 'Invalid token' );
+            }
+
+            const scopes = response.headers.get('X-OAuth-Scopes')?.split(', ') || [];
+            if (!scopes.includes('user:email')) {
+                throw new UnauthorizedException('GitHub token lacks user:email scope');
             }
 
             const data = await response.json();
