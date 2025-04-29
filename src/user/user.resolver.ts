@@ -59,11 +59,13 @@ export class UserResolver {
     @Query(() => UserResponse, { name: 'user' })
     findOne(
         @CurrentUser() user: User,
-        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
-        @Context() context: any
+        // @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @Context() context: any,
+        // @Args('id', { type: () => ID, nullable: true }, ParseUUIDPipe) id?: string,
+        @Args('id', { type: () => ID, nullable: true }) id?: string,
     ) {
-        context.userId = id;
-        return this.userService.findOne( user, id );
+        context.userId = id ?? user.id;
+        return this.userService.findOne( user, id ?? user.id );
     }
 
 
@@ -81,9 +83,9 @@ export class UserResolver {
     @Mutation( () => Boolean )
     removeUser(
         @CurrentUser() user: User,
-        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string
+        @Args( 'id', { type: () => ID, nullable: true }, ParseUUIDPipe ) id?: string
     ) {
-        return this.userService.remove( user, id );
+        return this.userService.remove( user, id ?? user.id );
     }
 
     /**
@@ -106,26 +108,43 @@ export class UserResolver {
     }
 
 
-    @ResolveField( () => [UserResponse], {
-        name        : 'users',
+    // @ResolveField( () => [UserResponse], {
+    //     name        : 'users',
+    //     middleware  : [ hideUserMiddleware ]
+    // })
+    // getUserRelations(
+    //     @Parent() user      : User,
+    //     @Args() search      : SearchArgs,
+    //     @Args() pagination  : PaginationArgs
+    // ) {
+    //     return this.userService.findAll( user, pagination, search );
+    // }
+
+    @ResolveField( () => Number, {
+        name: 'total',
         middleware  : [ hideUserMiddleware ]
     })
     getUserRelations(
-        @Parent() user      : User,
-        @Args() search      : SearchArgs,
-        @Args() pagination  : PaginationArgs
+        @CurrentUser() user: User,
     ) {
-        return this.userService.findAll( user, pagination, search );
+        return this.userService.totalUsers( user );
     }
 
 
     @ResolveField( () => [UserAttribute], { name: 'attributes' })
     getAttributes(
         @Parent() user      : User,
-        @Context() context  : any,
+        // @CurrentUser() user: User,
+        // @Context() context  : any,
         @Args() attributes  : AttributesArgs
     ) {
-        return this.userAttributeService.findAll( user, context.userId, attributes );
+        console.log('🚀 ~ file: user.resolver.ts:128 ~ attributes:', attributes)
+        // console.log('🚀 ~ file: user.resolver.ts:126 ~ context:', context)
+        // console.log('🚀 ~ file: user.resolver.ts:127 ~ attributes:', attributes)
+        // return this.userAttributeService.findByKeys( user, user.id, attributes );
+        return this.userAttributeService.findByKeys( user.id, attributes );
+        // return this.userAttributeService.findByKeys( user, context.userId, attributes );
+        // return this.userAttributeService.findByKeys( user, user.apiUserId ?? user.id, attributes );
     }
 
 
