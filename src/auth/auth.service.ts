@@ -15,13 +15,14 @@ import Redis            from 'ioredis';
 import { SignUpDto }            from '@auth/dto/signup.dto';
 import { AuthResponse }         from '@auth/types/auth-response.type';
 import { SocialSigninProvider } from '@auth/enums/social-signin.enum';
-import { PasswordDto }          from '@auth/dto/password.dto';
 import { SocialSigninDto }      from '@auth/dto/social-signin.dto';
 import { SocialService }        from '@auth/services/Social.services';
+import { SignInDto }            from '@auth/dto/signin.dto';
+import { GitHubAuthService }    from '@auth/services/github/github-auth.service';
+import { SocialSignupModel }    from '@auth/services/models/social-signup.model';
 import { ENVS }                 from '@config/envs';
 import { PrismaException }      from '@config/prisma-catch';
 import { User }                 from '@user/entities/user.entity';
-import { GitHubAuthService } from './services/github/github-auth.service';
 
 
 @Injectable()
@@ -68,7 +69,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
 
     async signUp(
-        { role, apiUserId, email, password, nickname, avatar, name }: SignUpDto | PasswordDto,
+        { role, apiUserId, email, password, nickname, avatar, name }: SignUpDto,
         isVerified: boolean = false
     ): Promise<AuthResponse> {
         let roleId  : string    | null = null;
@@ -145,8 +146,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
     }
 
 
-    async signIn({ email, password, apiUserId }: SignUpDto ) : Promise<AuthResponse> {
-        const user = await this.user.findFirst({ where: { email, apiUserId }});
+    async signIn({ email, password }: SignInDto ) : Promise<AuthResponse> {
+        const user = await this.user.findFirst({ where: { email }});
 
         if ( !user ) throw new UnauthorizedException( 'Invalid credentials.' );
         if ( !user.isVerified ) throw new UnauthorizedException( 'User not verified.' );
@@ -163,6 +164,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         // }
 
         const pwdAdmin = await this.pwdAdmin.findFirst({
+            select: { password: true },
             where: {
                 userId      : user.id,
                 isActive    : true
@@ -172,6 +174,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         if ( !pwdAdmin ) throw new UnauthorizedException( 'Invalid credentials.' );
 
         const isPasswordValid = await argon2.verify( pwdAdmin.password, password );
+        // TODO: Quitar esta validacin cuando tenga redis
         if ( !isPasswordValid ) throw new UnauthorizedException( 'Invalid credentials.' );
 
         // if (!isPasswordValid) {
@@ -189,7 +192,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         // await this.redis.del(attemptsKey);
         // await this.redis.del(lockKey);
 
-        const { apiUserId: api, version, ...rest } = user;
+        const { apiUserId, version, isVerified, ...rest } = user;
 
         return {
             token   : this.#getJwtToken( user.id ),
@@ -214,11 +217,21 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         if ( !user ) throw new UnauthorizedException( 'Unauthorized user.' );
         if ( !user.isVerified ) throw new UnauthorizedException( 'User not verified.' );
 
+        const {
+            userRoles,
+            pwdAdmins,
+            ...rest
+        } = user;
+
+        // return {
+        //     ...user,
+        //     roles       : user.userRoles.map( userRole => userRole.role ),
+        //     userRoles   : undefined,
+        //     pwdAdmins   : undefined
+        // } as User;
         return {
-            ...user,
+            ...rest,
             roles       : user.userRoles.map( userRole => userRole.role ),
-            userRoles   : undefined,
-            pwdAdmins   : undefined
         } as User;
     }
 
@@ -238,12 +251,12 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         console.log('🚀 ~ file: auth.service.ts:231 ~ provider:', provider)
         console.log('🚀 ~ file: auth.service.ts:231 ~ accessToken:', accessToken)
         try {
-            const userInfo = {
-                [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
-                [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
+            const userInfo: SocialSignupModel = {
+                // [SocialSigninProvider.GOOGLE]    : await this.social.verifyGoogleToken( accessToken ),
+                // [SocialSigninProvider.FACEBOOK]  : await this.social.verifyFacebookToken( accessToken ),
                 [SocialSigninProvider.GITHUB]    : await GitHubAuthService.verifyGitHubToken( accessToken ),
-                [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
-                [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
+                // [SocialSigninProvider.X]         : await this.social.verifyXToken( accessToken ),
+                // [SocialSigninProvider.TWITCH]    : await this.social.verifyTwitchToken( accessToken )
             }[provider];
             // const userInfo = await this.social.verifyGitHubToken( accessToken )
             // const userInfo = await GitHubAuthService.verifyGitHubToken( accessToken )
@@ -252,9 +265,17 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             const user = await this.user.findFirst({ where: { email: userInfo.email, apiUserId }});
 
             // if ( !user ) return await this.signUp({ role, apiUserId, email: userInfo.email });
-            if ( !user ) return await this.signUp( userInfo, true );
+            const signUp = {
+                role,
+                apiUserId,
+                email       : userInfo.email,
+                nickname    : userInfo.nickname,
+                avatar      : userInfo.avatar,
+            }
 
-            const { apiUserId: api, ...rest } = user;
+            if ( !user ) return await this.signUp( signUp, true );
+
+            const { apiUserId: api, version, isVerified, ...rest } = user;
 
             return {
                 token   : this.#getJwtToken( user.id ),
