@@ -5,6 +5,7 @@ import { SignUpDto }        from '@auth/dto/signup.dto';
 import { AuthGuard }        from '@auth/guards/auth.guard';
 import { CurrentUser }      from '@auth/decorators/current-user.decorator';
 import { User }             from '@user/entities/user.entity';
+import { SignInDto }        from '@auth/dto/signin.dto';
 import { SocialSigninDto }  from '@auth/dto/social-signin.dto';
 
 
@@ -28,9 +29,9 @@ export class AuthController {
     @HttpCode( HttpStatus.OK )
     @Post( 'sign-in' )
     signIn(
-        @Body() signUpDto: SignUpDto
+        @Body() signInDto: SignInDto
     ) {
-        return this.authService.signIn( signUpDto );
+        return this.authService.signIn( signInDto );
     }
 
 
