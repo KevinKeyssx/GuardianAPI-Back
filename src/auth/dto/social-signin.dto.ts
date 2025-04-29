@@ -4,10 +4,10 @@ import { PartialType } from "@nestjs/mapped-types";
 import { IsEnum, IsNotEmpty, IsString, Length } from "class-validator";
 
 import { SocialSigninProvider } from "@auth/enums/social-signin.enum";
-import { BasicSignUpDto }       from "@auth/dto/basic-signup.dto";
+import { SignUpDto }            from "@auth/dto/signup.dto";
 
 
-export class SocialSigninDto extends PartialType( BasicSignUpDto ) {
+export class SocialSigninDto extends PartialType( SignUpDto ) {
 
     @ApiProperty({
         example     : SocialSigninProvider.GOOGLE,
