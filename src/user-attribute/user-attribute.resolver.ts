@@ -36,7 +36,8 @@ export class UserAttributeResolver {
         @CurrentUser() currentUser: User,
         @Args() attributes  : AttributesArgs
     ) {
-        return this.userAttributeService.findAll( currentUser, currentUser.id, attributes );
+        // return this.userAttributeService.findByKeys( currentUser, currentUser.id, attributes );
+        return this.userAttributeService.findByKeys( currentUser.id, attributes );
     }
 
 
@@ -47,7 +48,8 @@ export class UserAttributeResolver {
         @Args('userId', { type: () => ID }, ParseUUIDPipe ) userId: string,
         @Args() attributes  : AttributesArgs
     ) {
-        return this.userAttributeService.findAll( currentUser, userId, attributes );
+        // return this.userAttributeService.findByKeys( currentUser, userId, attributes );
+        return this.userAttributeService.findByKeys( userId, attributes, currentUser );
     }
 
 
