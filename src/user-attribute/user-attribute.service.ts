@@ -36,9 +36,11 @@ export class UserAttributeService implements OnModuleInit {
 
 
     async #validPermissions( userId: string, currentUser: User ): Promise<User> {
+        console.log('🚀 ~ file: user-attribute.service.ts:39 ~ userId:', userId)
+        console.log('🚀 ~ file: user-attribute.service.ts:39 ~ currentUser:', currentUser)
         const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-            include: { plan: true}
+            where   : { id: userId },
+            include : { plan: true }
         });
 
         if ( !user ) throw new NotFoundException( `User whit id ${userId} not found.` );
@@ -72,12 +74,12 @@ export class UserAttributeService implements OnModuleInit {
     }
 
 
-    async findAll(
-        currentUser : User,
+    async findByKeys(
         userId      : string,
-        { keys }    : AttributesArgs
+        { keys }    : AttributesArgs,
+        currentUser?: User | null,
     ): Promise<UserAttribute[]> {
-        await this.#validPermissions( userId, currentUser );
+        if ( currentUser ) await this.#validPermissions( userId, currentUser );
 
         return await this.prisma.userAttribute.findMany({
             where: {
