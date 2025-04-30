@@ -5,5 +5,6 @@ export class AuthResponse {
 
     token   : string;
     user    : User;
+    csrfToken?: string;
 
 }
