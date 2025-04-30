@@ -4,6 +4,8 @@ import { NestFactory }              from '@nestjs/core';
 import { AppModule }    from './app.module';
 import { ENVS }         from '@config/envs';
 import { AuthModule }   from '@auth/auth.module';
+import * as cookieParser from 'cookie-parser';
+import { CsrfGuard } from '@auth/guards/csrf-token.guard';
 
 
 ( async () => {
@@ -16,12 +18,14 @@ import { AuthModule }   from '@auth/auth.module';
             whitelist: true
         }),
     )
+    // .useGlobalGuards(new CsrfGuard())
+    .use(cookieParser())
     .enableCors({
         origin          : "*",
         credentials     : true,
         methods         : [ "GET", "POST", "PUT", "DELETE" ],
-        allowedHeaders  : [ "Content-Type", "Authorization" ],
-    });
+        allowedHeaders: ['Content-Type', 'Authorization', 'secret', 'X-CSRF-Token'],
+    })
 
     AuthModule.setupSwagger( app );
 
