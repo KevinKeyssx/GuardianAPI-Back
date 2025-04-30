@@ -11,6 +11,7 @@ import { JwtService }   from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as argon2      from 'argon2';
 import Redis            from 'ioredis';
+import * as crypto      from 'crypto';
 
 import { SignUpDto }            from '@auth/dto/signup.dto';
 import { AuthResponse }         from '@auth/types/auth-response.type';
@@ -244,7 +245,6 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         user
     }) as AuthResponse;
 
-
     async signInSocial(
         { provider, accessToken, role, apiUserId }: SocialSigninDto
     ): Promise<AuthResponse> {
@@ -279,7 +279,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
             return {
                 token   : this.#getJwtToken( user.id ),
-                user    : rest
+                user    : rest,
+                csrfToken: crypto.randomUUID(),
             } as AuthResponse;
         } catch ( error ) {
             throw new UnauthorizedException( error.message );
