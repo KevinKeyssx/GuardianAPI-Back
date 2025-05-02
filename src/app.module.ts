@@ -30,12 +30,23 @@ import { UserRolesModule }      from '@user-roles/user-roles.module';
                 playground      : false,
                 autoSchemaFile  : join( process.cwd(), 'src/schema.gql' ),
                 plugins         : [ ApolloServerPluginLandingPageLocalDefault() ],
-                context ({ req }) { 
-                    const token = req.headers.authorization?.split(' ')[1];
-                    if ( !token ) throw new Error( 'Token needed' );
+                context: ({ req }) => {
+                    try {
+                        let token = req.cookies?.token;
 
-                    const payload = jwtService.decode( token );
-                    if ( !payload ) throw new Error( 'Invalid token' );
+                        if ( !token ) {
+                            token = req.headers.authorization?.split(' ')[1];
+                            if ( !token ) throw new Error( 'Token needed' );
+                        }
+
+                        const payload = jwtService.verify(token); // Usa verify en lugar de decode para validar
+                        if ( !payload ) throw new Error( 'Invalid token' );
+
+                        return { user: payload };
+                    } catch (error) {
+                        console.error('Error in GraphQL context:', error.message);
+                        throw error;
+                    }
                 },
             }),
         }),
