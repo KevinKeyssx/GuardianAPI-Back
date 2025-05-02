@@ -59,15 +59,16 @@ export class UserService implements OnModuleInit {
         const users = await this.prisma.user.findMany({
             take    : each,
             skip    : page,
-            orderBy : { [field]: orderBy },
+            // orderBy : { [field]: orderBy },
+            orderBy : { createdAt: orderBy },
             include : this.#guardianIncludes(),
             where   : {
                 isActive    : true,
                 apiUserId   : currentUser.id,
-                [field]: {
-                    contains    : search,
-                    mode        : 'insensitive',
-                }
+                // [field]: {
+                //     contains    : search,
+                //     mode        : 'insensitive',
+                // }
             },
         }) as unknown as User[];
 
