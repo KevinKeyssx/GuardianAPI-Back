@@ -207,11 +207,12 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             where: {
                 id          : userId,
                 isActive    : true,
-                pwdAdmins   : { some: { isActive: true } }
+                isVerified  : true,
+                // pwdAdmins   : { some: { isActive: true } }
             },
             include: {
                 userRoles: { include: { role: true }},
-                pwdAdmins: true
+                // pwdAdmins: true
             },
         });
 
@@ -220,7 +221,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
         const {
             userRoles,
-            pwdAdmins,
+            // pwdAdmins,
             ...rest
         } = user;
 
@@ -280,7 +281,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             return {
                 token   : this.#getJwtToken( user.id ),
                 user    : rest,
-                csrfToken: crypto.randomUUID(),
+                // csrfToken: crypto.randomUUID(),
             } as AuthResponse;
         } catch ( error ) {
             throw new UnauthorizedException( error.message );
