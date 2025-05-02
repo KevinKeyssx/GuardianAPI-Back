@@ -12,6 +12,13 @@ import { CsrfGuard } from '@auth/guards/csrf-token.guard';
     const logger    = new Logger( 'Main' );
     const app       = await NestFactory.create( AppModule );
 
+    const allowedOrigins = [
+        'http://localhost:4321',
+        'https://guardianapi.vercel.app',
+        'http://localhost:3007',
+        'https://studio.apollographql.com'
+    ];
+
     app.setGlobalPrefix( 'api/v1' )
     .useGlobalPipes(
         new ValidationPipe({
@@ -21,11 +28,17 @@ import { CsrfGuard } from '@auth/guards/csrf-token.guard';
     // .useGlobalGuards(new CsrfGuard())
     .use(cookieParser())
     .enableCors({
-        origin          : "*",
-        credentials     : true,
-        methods         : [ "GET", "POST", "PUT", "DELETE" ],
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, origin || '*');
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'secret', 'X-CSRF-Token'],
-    })
+    });
 
     AuthModule.setupSwagger( app );
 
