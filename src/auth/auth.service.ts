@@ -281,7 +281,7 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             return {
                 token   : this.#getJwtToken( user.id ),
                 user    : rest,
-                // csrfToken: crypto.randomUUID(),
+                csrfToken: crypto.randomUUID(),
             } as AuthResponse;
         } catch ( error ) {
             throw new UnauthorizedException( error.message );
