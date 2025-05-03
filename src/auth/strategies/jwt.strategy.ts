@@ -23,28 +23,16 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
         private readonly secretsService: SecretsService
     ) {
         super({
-            // jwtFromRequest: (req) => {
-            //     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-            //     req.token = token;
-            //     req.secret = req.headers['secret'];
-
-            //     return token;
-            // },
-            // secretOrKey         : ENVS.JWT_SECRET,
-            // passReqToCallback   : true
-
             jwtFromRequest: ExtractJwt.fromExtractors([
-                // Extraer desde la cookie 'token'
                 (request: Request) => {
                     const token = request.cookies?.token;
                     if (token) {
-                        request.token = token; // Mantener compatibilidad con tu lógica
+                        request.token = token;
                         request.secret = request.headers['secret'] as string;
                         return token;
                     }
                     return null;
                 },
-                // Extraer desde Authorization header (para compatibilidad)
                 ExtractJwt.fromAuthHeaderAsBearerToken(),
             ]),
             secretOrKey: ENVS.JWT_SECRET,
