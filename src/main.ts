@@ -25,7 +25,7 @@ import { CsrfGuard } from '@auth/guards/csrf-token.guard';
             whitelist: true
         }),
     )
-    // .useGlobalGuards(new CsrfGuard())
+    .useGlobalGuards(new CsrfGuard())
     .use(cookieParser())
     .enableCors({
         origin: (origin, callback) => {
