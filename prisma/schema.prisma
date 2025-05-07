@@ -68,16 +68,19 @@ model User {
     apiUserId   String?
     apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id], onDelete: Cascade)
     users       User[]      @relation("ApiUserHierarchy")
-    roles       Role[]      // Relación inversa con Role (si una cuenta API tiene roles específicos)
+    roles       Role[]
+    userPermissions UserPermission[]
     secrets     Secret[]
     pwdAdmins   PwdAdmin[]
     attributes  UserAttribute[]
+    attributeValues UserAttributeValue[]
     userRoles   UserRole[]
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
     version     Int       @default(0)
     isVerified  Boolean   @default(false)
+
 
     @@index([isActive, apiUserId, email])
     @@unique([email, nickname, apiUserId])
@@ -93,6 +96,7 @@ model Role {
     user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     userRoles   UserRole[]
+    rolePermissions RolePermission[]
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
@@ -112,8 +116,50 @@ model UserRole {
     role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
     roleId     String
 
+    createdAt DateTime @default(now())
+    updatedAt DateTime? @updatedAt
+
     @@index([userId, roleId, isActive])
     @@unique([userId, roleId])
+}
+
+
+model Permission {
+    id String @id @default(uuid())
+    name String 
+    description String?
+    rolePermissions RolePermission[]
+    userPermissions UserPermission[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    @@unique([name])
+    @@index([name])
+}
+
+
+model RolePermission {
+    id String @id @default(uuid())
+    role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+    roleId String
+    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+    permissionId String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    @@unique([roleId, permissionId])
+}
+
+
+model UserPermission {
+    id String @id @default(uuid())
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+    permissionId String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([userId, permissionId])
+    @@unique([userId, permissionId])
 }
 
 model Secret {
@@ -147,7 +193,6 @@ enum AttributeType {
 model UserAttribute {
     id          String    @id @default(uuid())
     key         String    // Nombre del atributo (ej.: "points")
-    value       Json?      // Valor del atributo (ej.: "100")
     defaultValue Json?      // Valor por defecto (ej.: "100")
     isActive    Boolean   @default(true)
 
@@ -169,8 +214,28 @@ model UserAttribute {
     updatedAt   DateTime  @updatedAt
     version     Int       @default(0)
 
+    values      UserAttributeValue[] 
+
     @@index([userId])
     @@unique([userId, key])
+}
+
+model UserAttributeValue {
+
+    id String @id @default(uuid())
+    value Json?
+
+    userAttribute UserAttribute @relation(fields: [userAttributeId], references: [id], onDelete: Cascade)
+    userAttributeId String
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    version     Int       @default(0)
+
+    @@index([userAttributeId, userId])
 }
 
 model PwdAdmin {
