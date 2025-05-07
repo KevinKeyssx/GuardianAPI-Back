@@ -73,14 +73,14 @@ export class UserAttributeResolver {
     }
 
 
-    @UseGuards( SecretAuthGuard( true ))
-    @Mutation( () => ValueAttribute, { name: 'updateValueUserAttribute' })
-    updateValueUserAttribute(
-        @CurrentUser() currentUser: User,
-        @Args( 'updateValueUserAttributeInput' ) updateUserAttributeInput: UpdateValueUserAttributeInput
-    ) {
-        return this.userAttributeService.updateValue( currentUser, updateUserAttributeInput );
-    }
+    // @UseGuards( SecretAuthGuard( true ))
+    // @Mutation( () => ValueAttribute, { name: 'updateValueUserAttribute' })
+    // updateValueUserAttribute(
+    //     @CurrentUser() currentUser: User,
+    //     @Args( 'updateValueUserAttributeInput' ) updateUserAttributeInput: UpdateValueUserAttributeInput
+    // ) {
+    //     return this.userAttributeService.updateValue( currentUser, updateUserAttributeInput );
+    // }
 
 
     @UseGuards( SecretAuthGuard( false ))
