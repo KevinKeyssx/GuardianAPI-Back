@@ -55,17 +55,17 @@ export class UserAttributeService implements OnModuleInit {
         currentUser             : User,
         createUserAttributeInput: CreateUserAttributeInput
     ): Promise<UserAttribute> {
-        const user      = await this.#validPermissions( createUserAttributeInput.userId, currentUser );
-        const userCount = await this.prisma.user.count({ where: { apiUserId: user.apiUserId }});
+        const userCount = await this.prisma.user.count({ where: { apiUserId: currentUser.id }});
 
-        if ( userCount >= user.plan!.maxAttributes )
+        if ( userCount >= currentUser.plan!.maxAttributes )
             throw new BadRequestException( 'Maximum attributes reached.' );
 
         try {
             return await this.prisma.userAttribute.create({
                 data: {
                     ...createUserAttributeInput,
-                    value: createUserAttributeInput.defaultValue ?? null
+                    userId: currentUser.id,
+                    // value: createUserAttributeInput.defaultValue ?? null
                 }
             });
         } catch ( error ) {
@@ -131,79 +131,79 @@ export class UserAttributeService implements OnModuleInit {
     }
 
 
-    #isValidType = (
-        value   : any,
-        type    : AttributeType
-    ): boolean => ({
-        [AttributeType.STRING]      : typeof value === 'string',
-        [AttributeType.NUMBER]      : typeof value === 'number' && Number.isInteger( value ),
-        [AttributeType.BOOLEAN]     : typeof value === 'boolean',
-        [AttributeType.DECIMAL]     : typeof value === 'number' && !Number.isInteger( value ),
-        [AttributeType.LIST]        : Array.isArray( value ),
-        [AttributeType.JSON]        : typeof value === 'object' && value !== null,
-        [AttributeType.DATETIME]    : typeof value === 'string' && new Date( value ).toString() !== 'Invalid Date',
-        [AttributeType.UUID]        : typeof value === 'string' && isUUID( value )
-    }[type] || false );
+    // #isValidType = (
+    //     value   : any,
+    //     type    : AttributeType
+    // ): boolean => ({
+    //     [AttributeType.STRING]      : typeof value === 'string',
+    //     [AttributeType.NUMBER]      : typeof value === 'number' && Number.isInteger( value ),
+    //     [AttributeType.BOOLEAN]     : typeof value === 'boolean',
+    //     [AttributeType.DECIMAL]     : typeof value === 'number' && !Number.isInteger( value ),
+    //     [AttributeType.LIST]        : Array.isArray( value ),
+    //     [AttributeType.JSON]        : typeof value === 'object' && value !== null,
+    //     [AttributeType.DATETIME]    : typeof value === 'string' && new Date( value ).toString() !== 'Invalid Date',
+    //     [AttributeType.UUID]        : typeof value === 'string' && isUUID( value )
+    // }[type] || false );
 
 
-    #validateConstraints = (
-        value       : any,
-        userAttr    : UserAttribute
-    ): string | undefined => {
-        const { min, max, minLength, maxLength, type, minDate, maxDate } = userAttr;
+    // #validateConstraints = (
+    //     value       : any,
+    //     userAttr    : UserAttribute
+    // ): string | undefined => {
+    //     const { min, max, minLength, maxLength, type, minDate, maxDate } = userAttr;
 
-        if ( type === AttributeType.NUMBER || type === AttributeType.DECIMAL ) {
-            if ( min !== null && value < min ) return `Value must be greater than or equal to ${min}`;
-            if ( max !== null && value > max ) return `Value must be less than or equal to ${max}`;
-        }
+    //     if ( type === AttributeType.NUMBER || type === AttributeType.DECIMAL ) {
+    //         if ( min !== null && value < min ) return `Value must be greater than or equal to ${min}`;
+    //         if ( max !== null && value > max ) return `Value must be less than or equal to ${max}`;
+    //     }
 
-        if ( type === AttributeType.STRING || type === AttributeType.LIST ) {
-            if ( minLength !== null && value.length < minLength ) return `Value must be at least ${minLength} characters long`;
-            if ( maxLength !== null && value.length > maxLength ) return `Value must be at most ${maxLength} characters long`;
-        }
+    //     if ( type === AttributeType.STRING || type === AttributeType.LIST ) {
+    //         if ( minLength !== null && value.length < minLength ) return `Value must be at least ${minLength} characters long`;
+    //         if ( maxLength !== null && value.length > maxLength ) return `Value must be at most ${maxLength} characters long`;
+    //     }
 
-        if ( type === AttributeType.DATETIME ) {
-            if ( minDate !== null && new Date( value ) < new Date( minDate )) return `Value must be greater than or equal to ${minDate}`;
-            if ( maxDate !== null && new Date( value ) > new Date( maxDate )) return `Value must be less than or equal to ${maxDate}`;
-        }
+    //     if ( type === AttributeType.DATETIME ) {
+    //         if ( minDate !== null && new Date( value ) < new Date( minDate )) return `Value must be greater than or equal to ${minDate}`;
+    //         if ( maxDate !== null && new Date( value ) > new Date( maxDate )) return `Value must be less than or equal to ${maxDate}`;
+    //     }
 
-        return undefined;
-    };
+    //     return undefined;
+    // };
 
 
-    async updateValue(
-        currentUser: User,
-        updateUserAttributeInput: UpdateValueUserAttributeInput
-    ): Promise<ValueAttribute> {
-        const userAttribute = await this.findOne( currentUser, updateUserAttributeInput.id );
+    // async updateValue(
+    //     currentUser: User,
+    //     updateUserAttributeInput: UpdateValueUserAttributeInput
+    // ): Promise<ValueAttribute> {
+    //     const userAttribute = await this.findOne( currentUser, updateUserAttributeInput.id );
 
-        if ( userAttribute.required && !updateUserAttributeInput.value ) {
-            throw new BadRequestException( 'Value is required' );
-        }
+    //     if ( userAttribute.required && !updateUserAttributeInput.value ) {
+    //         throw new BadRequestException( 'Value is required' );
+    //     }
 
-        if ( !this.#isValidType( updateUserAttributeInput.value, userAttribute.type )) {
-            throw new BadRequestException( `Invalid type for value. Expected ${userAttribute.type}.` );
-        }
+    //     if ( !this.#isValidType( updateUserAttributeInput.value, userAttribute.type )) {
+    //         throw new BadRequestException( `Invalid type for value. Expected ${userAttribute.type}.` );
+    //     }
 
-        const error = this.#validateConstraints( updateUserAttributeInput.value, userAttribute );
+    //     const error = this.#validateConstraints( updateUserAttributeInput.value, userAttribute );
 
-        if ( error ) throw new BadRequestException( error );
+    //     if ( error ) throw new BadRequestException( error );
 
-        await this.prisma.userAttribute.update({
-            where: {
-                id      : updateUserAttributeInput.id,
-                version : userAttribute.version
-            },
-            data: {
-                value   : updateUserAttributeInput.value,
-                version : userAttribute.version + 1
-            }
-        });
+    //     await this.prisma.userAttribute.update({
+    //         where: {
+    //             id      : updateUserAttributeInput.id,
+    //             version : userAttribute.version
+    //         },
+    //         data: {
+    //             // value   : updateUserAttributeInput.value,
+    //             version : userAttribute.version + 1
+    //         }
+    //     });
 
-        return {
-            value: updateUserAttributeInput.value
-        }
-    }
+    //     return {
+    //         value: updateUserAttributeInput.value
+    //     }
+    // }
 
 
     async remove( currentUser: User, id: string ): Promise<UserAttribute> {
