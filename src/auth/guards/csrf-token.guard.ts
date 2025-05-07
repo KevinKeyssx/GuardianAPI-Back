@@ -31,6 +31,7 @@ export class CsrfGuard implements CanActivate {
 
         this.logger.debug(`Checking CSRF for URL: ${request.url || 'unknown'}, Origin: ${request.headers.origin || 'undefined'}`);
 
+        // || request.url.includes('/auth/refresh')
         if ( !request.url.includes('/graphql' )) {
             this.logger.debug( 'Non-GraphQL request, skipping CSRF validation' );
             return true;
