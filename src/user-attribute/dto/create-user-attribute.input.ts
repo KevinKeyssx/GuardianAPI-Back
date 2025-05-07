@@ -1,4 +1,4 @@
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 
 import {
     IsBoolean,
@@ -9,7 +9,6 @@ import {
     IsNumber,
     IsOptional,
     IsString,
-    IsUUID,
     Matches,
     Max,
     Min
@@ -27,11 +26,6 @@ export class CreateUserAttributeInput {
     @Field(() => String)
     key: string;
 
-    @IsUUID()
-    @IsDefined()
-    @Field( () => ID )
-    userId: string;
-
     @IsOptional()
     @Field(() => GraphQLJSON, { nullable: true })
     defaultValue?: any;
@@ -48,7 +42,7 @@ export class CreateUserAttributeInput {
 
     @IsOptional()
     @IsNumber()
-    @Min(0)
+    @Min( 0 )
     @Field( () => Number, { nullable: true })
     min?: number;
 
@@ -66,7 +60,7 @@ export class CreateUserAttributeInput {
 
     @IsOptional()
     @IsInt()
-    @Max(1000)
+    @Max( 1000 )
     @Field( () => Number, { nullable: true })
     maxLength?: number;
 
