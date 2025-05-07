@@ -89,7 +89,6 @@ type UserResponse {
 
 type UserAttribute {
   key: String!
-  value: JSON
   defaultValue: JSON
   isActive: Boolean!
   type: AttributeType!
@@ -128,10 +127,6 @@ type ValidateUser {
   errorCode: String
 }
 
-type ValueAttribute {
-  value: JSON
-}
-
 type AssignUsersRolesResponse {
   success: [UserRole!]
   errors: [ErrorDetail!]
@@ -166,7 +161,6 @@ type Mutation {
   removeRole(id: ID!): Role!
   createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!
   updateUserAttribute(updateUserAttributeInput: UpdateUserAttributeInput!): UserAttribute!
-  updateValueUserAttribute(updateValueUserAttributeInput: UpdateValueUserAttributeInput!): ValueAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
   activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
@@ -214,7 +208,6 @@ input UpdateRoleInput {
 
 input CreateUserAttributeInput {
   key: String!
-  userId: ID!
   defaultValue: JSON
   isActive: Boolean = true
   type: AttributeType!
@@ -230,7 +223,6 @@ input CreateUserAttributeInput {
 
 input UpdateUserAttributeInput {
   key: String
-  userId: ID
   defaultValue: JSON
   isActive: Boolean = true
   type: AttributeType
@@ -242,11 +234,6 @@ input UpdateUserAttributeInput {
   required: Boolean = false
   maxDate: String
   minDate: String
-  id: ID!
-  value: JSON
-}
-
-input UpdateValueUserAttributeInput {
   id: ID!
   value: JSON
 }
