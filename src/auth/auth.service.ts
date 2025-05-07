@@ -208,11 +208,10 @@ export class AuthService extends PrismaClient implements OnModuleInit {
                 id          : userId,
                 isActive    : true,
                 isVerified  : true,
-                // pwdAdmins   : { some: { isActive: true } }
             },
             include: {
                 userRoles: { include: { role: true }},
-                // pwdAdmins: true
+                plan: true
             },
         });
 
@@ -221,19 +220,12 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
         const {
             userRoles,
-            // pwdAdmins,
             ...rest
         } = user;
 
-        // return {
-        //     ...user,
-        //     roles       : user.userRoles.map( userRole => userRole.role ),
-        //     userRoles   : undefined,
-        //     pwdAdmins   : undefined
-        // } as User;
         return {
             ...rest,
-            roles       : user.userRoles.map( userRole => userRole.role ),
+            roles: user.userRoles.map( userRole => userRole.role ),
         } as User;
     }
 
@@ -263,9 +255,23 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             // const userInfo = await GitHubAuthService.verifyGitHubToken( accessToken )
             console.log('🚀 ~ file: auth.service.ts:235 ~ userInfo:', userInfo)
 
-            const user = await this.user.findFirst({ where: { email: userInfo.email, apiUserId }});
+            const user = await this.user.findFirst({
+                where: {
+                    email: userInfo.email,
+                    apiUserId
+                },
+                include: {
+                    attributes: {
+                        select: {
+                            key         : true,
+                            isActive    : true,
+                            type        : true,
+                            required    : true
+                        }
+                    }
+                }
+            }) as User;
 
-            // if ( !user ) return await this.signUp({ role, apiUserId, email: userInfo.email });
             const signUp = {
                 role,
                 apiUserId,
@@ -279,9 +285,9 @@ export class AuthService extends PrismaClient implements OnModuleInit {
             const { apiUserId: api, version, isVerified, ...rest } = user;
 
             return {
-                token   : this.#getJwtToken( user.id ),
-                user    : rest,
-                csrfToken: crypto.randomUUID(),
+                token       : this.#getJwtToken( user.id ),
+                user        : rest,
+                csrfToken   : crypto.randomUUID(),
             } as AuthResponse;
         } catch ( error ) {
             throw new UnauthorizedException( error.message );
