@@ -138,8 +138,28 @@ type ErrorDetail {
   error: String!
 }
 
+type UserAttributeValue {
+  """Id of the user attribute value"""
+  id: ID!
+
+  """User of the user attribute value"""
+  user: User!
+
+  """User attribute of the user attribute value"""
+  userAttribute: UserAttribute!
+
+  """Value of the user attribute value"""
+  value: JSON!
+
+  """Created at of the user attribute value"""
+  createdAt: DateTime!
+
+  """Updated at of the user attribute value"""
+  updatedAt: DateTime!
+}
+
 type Query {
-  secret: SecretEntity!
+  secret: [SecretEntity!]!
   users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
   user(id: ID): UserResponse!
   validateToken(token: String!, refresh: Boolean = false): ValidateUser!
@@ -148,12 +168,14 @@ type Query {
   userAttributes(keys: [String!]): [UserAttribute!]!
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
+  userAttributeValues: [UserAttributeValue!]!
+  userAttributeValue(id: Int!): UserAttributeValue!
 }
 
 type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
   expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
-  removeSecret: Boolean!
+  removeSecret(id: String!): Boolean!
   updateUser(updateUserInput: UpdateUserInput!): UserResponse!
   removeUser(id: ID): Boolean!
   createRole(createRoleInput: CreateRoleInput!): Role!
@@ -168,6 +190,9 @@ type Mutation {
   asignManyRolesToUsers(asignRolesUsersInput: AsignUsersRolesInput!): AssignUsersRolesResponse!
   removeUserRole(id: ID!): UserRole!
   removeManyUserRoles(ids: [ID!]!): AssignUsersRolesResponse!
+  createUserAttributeValue(createUserAttributeValueInput: CreateUserAttributeValueInput!): UserAttributeValue!
+  updateUserAttributeValue(updateUserAttributeValueInput: UpdateUserAttributeValueInput!): UserAttributeValue!
+  removeUserAttributeValue(id: Int!): UserAttributeValue!
 }
 
 input CreateSecretInput {
@@ -176,6 +201,7 @@ input CreateSecretInput {
 
 input UpdateSecretInput {
   willExpireAt: DateTime!
+  id: String!
 }
 
 input UpdateUserInput {
@@ -251,4 +277,17 @@ input UpdatePwdInput {
 input AsignUsersRolesInput {
   userIds: [ID!]!
   roleIds: [ID!]!
+}
+
+input CreateUserAttributeValueInput {
+  value: JSON
+  userId: ID!
+  userAttributeId: ID!
+}
+
+input UpdateUserAttributeValueInput {
+  value: JSON
+  userId: ID
+  userAttributeId: ID
+  id: Int!
 }
