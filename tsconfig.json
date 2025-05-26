@@ -21,6 +21,7 @@
             "@prisma/*"         : ["src/prisma/*"],
             "@common/*"         : ["src/common/*"],
             "@user-roles/*"     : ["src/user-roles/*"],
+            "@user-attribute-values/*" : ["src/user-attribute-values/*"],
 		},
 		"incremental": true,
 		"skipLibCheck": true,
