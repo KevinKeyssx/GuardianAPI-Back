@@ -8,8 +8,6 @@ import { UserAttributeService }             from '@user-attribute/user-attribute
 import { UserAttribute }                    from '@user-attribute/entities/user-attribute.entity';
 import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
 import { UpdateUserAttributeInput }         from '@user-attribute/dto/update-user-attribute.input';
-import { UpdateValueUserAttributeInput }    from '@user-attribute/dto/update-value-user-attribute.input';
-import { ValueAttribute }                   from '@user-attribute/entities/value-attribute.entity';
 import { User }                             from '@user/entities/user.entity';
 
 
@@ -36,7 +34,6 @@ export class UserAttributeResolver {
         @CurrentUser() currentUser: User,
         @Args() attributes  : AttributesArgs
     ) {
-        // return this.userAttributeService.findByKeys( currentUser, currentUser.id, attributes );
         return this.userAttributeService.findByKeys( currentUser.id, attributes );
     }
 
@@ -48,7 +45,6 @@ export class UserAttributeResolver {
         @Args('userId', { type: () => ID }, ParseUUIDPipe ) userId: string,
         @Args() attributes  : AttributesArgs
     ) {
-        // return this.userAttributeService.findByKeys( currentUser, userId, attributes );
         return this.userAttributeService.findByKeys( userId, attributes, currentUser );
     }
 
@@ -71,16 +67,6 @@ export class UserAttributeResolver {
     ) {
         return this.userAttributeService.update( currentUser, updateUserAttributeInput );
     }
-
-
-    // @UseGuards( SecretAuthGuard( true ))
-    // @Mutation( () => ValueAttribute, { name: 'updateValueUserAttribute' })
-    // updateValueUserAttribute(
-    //     @CurrentUser() currentUser: User,
-    //     @Args( 'updateValueUserAttributeInput' ) updateUserAttributeInput: UpdateValueUserAttributeInput
-    // ) {
-    //     return this.userAttributeService.updateValue( currentUser, updateUserAttributeInput );
-    // }
 
 
     @UseGuards( SecretAuthGuard( false ))
