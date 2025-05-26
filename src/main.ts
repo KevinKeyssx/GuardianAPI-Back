@@ -1,10 +1,11 @@
 import { Logger, ValidationPipe }   from '@nestjs/common';
 import { NestFactory }              from '@nestjs/core';
 
+import * as cookieParser from 'cookie-parser';
+
 import { AppModule }    from './app.module';
 import { ENVS }         from '@config/envs';
 import { AuthModule }   from '@auth/auth.module';
-import * as cookieParser from 'cookie-parser';
 import { CsrfGuard } from '@auth/guards/csrf-token.guard';
 
 
@@ -20,15 +21,11 @@ import { CsrfGuard } from '@auth/guards/csrf-token.guard';
     ];
 
     app.setGlobalPrefix( 'api/v1' )
-    .useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true
-        }),
-    )
+    .useGlobalPipes( new ValidationPipe({ whitelist: true }))
     .useGlobalGuards(new CsrfGuard())
     .use(cookieParser())
     .enableCors({
-        origin: (origin, callback) => {
+        origin: ( origin: string | undefined, callback: ( error: Error | null, origin?: string ) => void ) => {
             if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, origin || '*');
             } else {
