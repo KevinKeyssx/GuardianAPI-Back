@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Inject,
     Injectable,
     NotFoundException,
@@ -7,8 +8,8 @@ import {
 }                               from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { randomBytes, createHmac }      from 'crypto';
-import { Prisma, PrismaClient, Secret } from '@prisma/client';
+import { randomBytes, createHmac }  from 'crypto';
+import { PrismaClient, Secret }     from '@prisma/client';
 
 import { ENVS }                     from '@config/envs';
 import { PrismaException }          from '@config/prisma-catch';
@@ -60,18 +61,21 @@ export class SecretsService implements OnModuleInit {
         userId          : string,
         providedSecret  : string
     ): Promise<boolean> => {
-        const userSecret = await this.prisma.secret.findFirst({
+        const userSecrets = await this.prisma.secret.findMany({
+            select: {
+                secret: true
+            },
             where: {  
                 apiUserId: userId,
                 isActive: true,
             },
         });
 
-        if ( !userSecret ) throw new UnauthorizedException( `Can't found a active secret for user ${userId}` );
+        if ( userSecrets.length === 0 ) throw new UnauthorizedException( `Can't found a active secret for user ${userId}` );
 
         const salt = this.#deriveSalt( userId );
 
-        return this.#createHmac( salt, providedSecret ) === userSecret.secret;
+        return userSecrets.some( secret => this.#createHmac( salt, providedSecret ) === secret.secret );
     };
 
 
@@ -80,7 +84,9 @@ export class SecretsService implements OnModuleInit {
         createSecretInput   : CreateSecretInput
     ): Promise<GenerateSecretResponse> {
         try {
-            await this.prisma.secret.deleteMany({ where: { apiUserId: currentUser.id }});
+            const secretCount = await this.prisma.secret.count({ where: { apiUserId: currentUser.id }});
+
+            if ( secretCount >= 8 ) throw new BadRequestException( 'You can only have 8 secrets.' );
 
             const secret        = this.#generateSecret();
             const secretHash    = this.#generateSecretHash( currentUser.id, secret );
@@ -109,22 +115,25 @@ export class SecretsService implements OnModuleInit {
 
 
     async updateExpiresAt(
-        currentUser         : User,
-        { willExpireAt }    : UpdateSecretInput
+        currentUser : User,
+        {
+            id,
+            willExpireAt
+        } : UpdateSecretInput
     ): Promise<Secret> {
         try {
-            const secret = await this.prisma.secret.findFirst({
+            const secret = await this.prisma.secret.findUnique({
                 select: {
                     id      : true,
                     version : true
                 },
                 where: {
-                    apiUserId   : currentUser.id,
+                    id          : id,
                     isActive    : true
                 }
             });
 
-            if ( !secret ) throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
+            if ( !secret ) throw new NotFoundException( `Secret whit id ${id} not found.` );
 
             return await this.prisma.secret.update({
                 where   : {
@@ -144,8 +153,8 @@ export class SecretsService implements OnModuleInit {
     }
 
 
-    async findOne( currentUser: User ): Promise<SecretEntity> {
-        const secret = await this.prisma.secret.findFirst({
+    async findAll( currentUser: User ): Promise<SecretEntity[]> {
+        const secrets = await this.prisma.secret.findMany({
             select: {
                 id              : true,
                 willExpireAt    : true,
@@ -160,17 +169,16 @@ export class SecretsService implements OnModuleInit {
             }
         });
 
-        if ( !secret ) throw new NotFoundException( `Secret whit id ${currentUser.id} not found.` );
-
-        return secret as SecretEntity;
+        return secrets as SecretEntity[];
     }
 
 
-    async remove( currentUser: User ): Promise<Prisma.BatchPayload> {
+    async remove( currentUser: User, id: string ) {
         try {
-            return await this.prisma.secret.deleteMany({
+            return await this.prisma.secret.delete({
                 where: {
-                    apiUserId: currentUser.id
+                    apiUserId: currentUser.id,
+                    id
                 }
             });
         } catch ( error ) {
