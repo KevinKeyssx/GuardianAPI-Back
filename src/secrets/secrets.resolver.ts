@@ -37,18 +37,19 @@ export class SecretsResolver {
     }
 
 
-    @Query(() => SecretEntity, { name: 'secret' })
-    findOne(
+    @Query(() => [SecretEntity], { name: 'secret' })
+    findAll(
         @CurrentUser() user: User,
     ) {
-        return this.secretsService.findOne( user );
+        return this.secretsService.findAll( user );
     }
 
 
     @Mutation(() => Boolean, { name: 'removeSecret' })
     async removeSecret(
+        @Args( 'id' ) id: string,
         @CurrentUser() user: User,
     ): Promise<boolean> {
-        return (await this.secretsService.remove( user )).count > 0;
+        return await this.secretsService.remove( user, id ) !== null;
     }
 }
