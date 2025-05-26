@@ -11,7 +11,7 @@ export class UserAttribute {
     @Field( () => String )
     key: string;
 
-    @Field( () => GraphQLJSON, { nullable: true } )
+    @Field( () => GraphQLJSON, { nullable: true })
     defaultValue?: any;
 
     @Field( () => Boolean )
