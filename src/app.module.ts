@@ -8,16 +8,18 @@ import { ScheduleModule }                   from '@nestjs/schedule';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
-import { AppController }        from './app.controller';
-import { AuthModule }           from '@auth/auth.module';
-import { CommonModule }         from '@common/common.module';
-import { UserModule }           from '@user/user.module';
-import { RolesModule }          from '@roles/roles.module';
-import { UserAttributeModule }  from '@user-attribute/user-attribute.module';
-import { SecretsModule }        from '@secrets/secrets.module';
-import { PwdAdminModule }       from '@pwd-admin/pwd-admin.module';
-import { PrismaModule }         from '@prisma/prisma.module';
-import { UserRolesModule }      from '@user-roles/user-roles.module';
+
+import { AppController }                from './app.controller';
+import { AuthModule }                   from '@auth/auth.module';
+import { CommonModule }                 from '@common/common.module';
+import { UserModule }                   from '@user/user.module';
+import { RolesModule }                  from '@roles/roles.module';
+import { UserAttributeModule }          from '@user-attribute/user-attribute.module';
+import { SecretsModule }                from '@secrets/secrets.module';
+import { PwdAdminModule }               from '@pwd-admin/pwd-admin.module';
+import { PrismaModule }                 from '@prisma/prisma.module';
+import { UserRolesModule }              from '@user-roles/user-roles.module';
+import { UserAttributeValuesModule }    from '@user-attribute-values/user-attribute-values.module';
 
 
 @Module({
@@ -39,7 +41,8 @@ import { UserRolesModule }      from '@user-roles/user-roles.module';
                             if ( !token ) throw new Error( 'Token needed' );
                         }
 
-                        const payload = jwtService.verify(token); // Usa verify en lugar de decode para validar
+                        const payload = jwtService.decode(token); // Usa verify en lugar de decode para validar
+                        // const payload = jwtService.verify(token); // Usa verify en lugar de decode para validar
                         if ( !payload ) throw new Error( 'Invalid token' );
 
                         return { user: payload };
@@ -62,6 +65,7 @@ import { UserRolesModule }      from '@user-roles/user-roles.module';
         PrismaModule,
         CommonModule,
         UserRolesModule,
+        UserAttributeValuesModule,
     ],
     controllers : [ AppController ],
     providers   : [],
