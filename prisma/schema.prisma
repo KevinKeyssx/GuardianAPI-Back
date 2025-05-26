@@ -236,6 +236,7 @@ model UserAttributeValue {
     version     Int       @default(0)
 
     @@index([userAttributeId, userId])
+    @@unique([userAttributeId, userId])
 }
 
 model PwdAdmin {
