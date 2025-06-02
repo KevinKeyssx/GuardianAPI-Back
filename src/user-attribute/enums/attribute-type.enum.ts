@@ -11,6 +11,14 @@ export enum AttributeType {
     UUID        = 'UUID'
 }
 
+export type AttributeTypeValue = 
+    string | 
+    number | 
+    boolean | 
+    object | 
+    Date | 
+    Array<string | number | boolean | object | Date> 
+
 
 registerEnumType(AttributeType, {
     name: 'AttributeType',
