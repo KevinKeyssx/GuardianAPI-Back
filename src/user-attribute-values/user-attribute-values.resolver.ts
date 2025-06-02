@@ -1,21 +1,24 @@
-import { UseGuards } from '@nestjs/common';
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
-import { SecretAuthGuard } from '@auth/guards/jwt-auth.guard';
-import { UserAttributeValuesService } from './user-attribute-values.service';
-import { UserAttributeValue } from './entities/user-attribute-value.entity';
-import { CreateUserAttributeValueInput } from './dto/create-user-attribute-value.input';
-import { UpdateUserAttributeValueInput } from './dto/update-user-attribute-value.input';
-import { CurrentUser } from '@auth/decorators/current-user.decorator';
-import { User } from '@user/entities/user.entity';
+import { SecretAuthGuard }                  from '@auth/guards/jwt-auth.guard';
+import { CurrentUser }                      from '@auth/decorators/current-user.decorator';
+import { UserAttributeValuesService }       from '@user-attribute-values/user-attribute-values.service';
+import { UserAttributeValue }               from '@user-attribute-values/entities/user-attribute-value.entity';
+import { CreateUserAttributeValueInput }    from '@user-attribute-values/dto/create-user-attribute-value.input';
+import { User }                             from '@user/entities/user.entity';
+import { ValueBasicInput }                  from '@user-attribute-values/dto/value-basic.dto';
 
 
-@UseGuards( SecretAuthGuard( true ))
-@Resolver(() => UserAttributeValue)
+@Resolver( () => UserAttributeValue )
 export class UserAttributeValuesResolver {
-    constructor(private readonly userAttributeValuesService: UserAttributeValuesService) {}
+    constructor(
+        private readonly userAttributeValuesService: UserAttributeValuesService
+    ) {}
 
-    @Mutation( () => UserAttributeValue )
+
+    @UseGuards( SecretAuthGuard( true ))
+    @Mutation( () => UserAttributeValue, { name: 'createUserAttributeValue' } )
     createUserAttributeValue(
         @Args('createUserAttributeValueInput') createUserAttributeValueInput: CreateUserAttributeValueInput,
         @CurrentUser() currentUser: User
@@ -23,23 +26,44 @@ export class UserAttributeValuesResolver {
         return this.userAttributeValuesService.create( createUserAttributeValueInput, currentUser );
     }
 
-    @Query(() => [UserAttributeValue], { name: 'userAttributeValues' })
-    findAll() {
-        return this.userAttributeValuesService.findAll();
+    @UseGuards( SecretAuthGuard( true ))
+    @Query( () => [UserAttributeValue], { name: 'userAttributeValues' })
+    findAll(
+        @CurrentUser() currentUser: User
+    ) {
+        return this.userAttributeValuesService.findAllByApiUser( currentUser );
     }
 
+
+    @UseGuards( SecretAuthGuard( true ))
     @Query(() => UserAttributeValue, { name: 'userAttributeValue' })
-    findOne(@Args('id', { type: () => Int }) id: number) {
-        return this.userAttributeValuesService.findOne(id);
+    findOne(
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @CurrentUser() currentUser: User
+    ) {
+        return this.userAttributeValuesService.findOne( id, currentUser );
     }
 
-    @Mutation(() => UserAttributeValue)
-    updateUserAttributeValue(@Args('updateUserAttributeValueInput') updateUserAttributeValueInput: UpdateUserAttributeValueInput) {
-        return this.userAttributeValuesService.update(updateUserAttributeValueInput.id, updateUserAttributeValueInput);
+
+    @UseGuards( SecretAuthGuard( true ))
+    @Mutation( () => UserAttributeValue, { name: 'updateUserAttributeValue' } )
+    updateUserAttributeValue(
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @Args( 'value' ) valueBasic: ValueBasicInput,
+        @CurrentUser() currentUser: User
+    ) {
+        return this.userAttributeValuesService.update( id, valueBasic, currentUser );
     }
 
-    @Mutation(() => UserAttributeValue)
-    removeUserAttributeValue(@Args('id', { type: () => Int }) id: number) {
-        return this.userAttributeValuesService.remove(id);
+
+    @UseGuards( SecretAuthGuard( false ))
+    @Mutation( () => UserAttributeValue, { name: 'updateUserAttributeValueByApiUser' } )
+    updateUserAttributeValueByApiUser(
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
+        @Args( 'value' ) valueBasic: ValueBasicInput,
+        @CurrentUser() currentUser: User
+    ) {
+        return this.userAttributeValuesService.updateByApiUser( id, valueBasic, currentUser );
     }
+
 }
