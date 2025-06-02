@@ -10,11 +10,10 @@ import {
 import { PrismaClient, UserAttribute }  from '@prisma/client';
 import { isUUID }                       from 'class-validator';
 
-import { CreateUserAttributeValueInput }    from './dto/create-user-attribute-value.input';
-import { ValueBasicInput }                  from './dto/value-basic.dto';
-import { AttributeType }                    from '@user-attribute/enums/attribute-type.enum';
-import { PrismaException }                  from '@config/prisma-catch';
-import { User }                             from '@user/entities/user.entity';
+import { CreateUserAttributeValueInput }        from '@user-attribute-values/dto/create-user-attribute-value.input';
+import { AttributeType, AttributeTypeValue }    from '@user-attribute/enums/attribute-type.enum';
+import { PrismaException }                      from '@config/prisma-catch';
+import { User }                                 from '@user/entities/user.entity';
 
 
 @Injectable()
@@ -141,7 +140,7 @@ export class UserAttributeValuesService implements OnModuleInit {
 
     async update(
         id          : string,
-        { value }   : ValueBasicInput,
+        value       : AttributeTypeValue,
         currentUser : User
     ) {
         try {
@@ -182,7 +181,7 @@ export class UserAttributeValuesService implements OnModuleInit {
 
     async updateByApiUser(
         id          : string,
-        { value }   : ValueBasicInput,
+        value       : AttributeTypeValue,
         currentUser : User
     ) {
         try {
