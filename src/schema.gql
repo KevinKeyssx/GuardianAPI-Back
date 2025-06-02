@@ -169,7 +169,7 @@ type Query {
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
   userAttributeValues: [UserAttributeValue!]!
-  userAttributeValue(id: Int!): UserAttributeValue!
+  userAttributeValue(id: ID!): UserAttributeValue!
 }
 
 type Mutation {
@@ -191,8 +191,8 @@ type Mutation {
   removeUserRole(id: ID!): UserRole!
   removeManyUserRoles(ids: [ID!]!): AssignUsersRolesResponse!
   createUserAttributeValue(createUserAttributeValueInput: CreateUserAttributeValueInput!): UserAttributeValue!
-  updateUserAttributeValue(updateUserAttributeValueInput: UpdateUserAttributeValueInput!): UserAttributeValue!
-  removeUserAttributeValue(id: Int!): UserAttributeValue!
+  updateUserAttributeValue(id: ID!, value: ValueBasicInput!): UserAttributeValue!
+  updateUserAttributeValueByApiUser(id: ID!, value: ValueBasicInput!): UserAttributeValue!
 }
 
 input CreateSecretInput {
@@ -285,9 +285,6 @@ input CreateUserAttributeValueInput {
   userAttributeId: ID!
 }
 
-input UpdateUserAttributeValueInput {
+input ValueBasicInput {
   value: JSON
-  userId: ID
-  userAttributeId: ID
-  id: Int!
 }
