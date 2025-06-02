@@ -1,13 +1,15 @@
 import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
+import { GraphQLJSON  } from 'graphql-scalars';
+
 import { SecretAuthGuard }                  from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }                      from '@auth/decorators/current-user.decorator';
 import { UserAttributeValuesService }       from '@user-attribute-values/user-attribute-values.service';
 import { UserAttributeValue }               from '@user-attribute-values/entities/user-attribute-value.entity';
 import { CreateUserAttributeValueInput }    from '@user-attribute-values/dto/create-user-attribute-value.input';
 import { User }                             from '@user/entities/user.entity';
-import { ValueBasicInput }                  from '@user-attribute-values/dto/value-basic.dto';
+import { AttributeTypeValue }               from '@user-attribute/enums/attribute-type.enum';
 
 
 @Resolver( () => UserAttributeValue )
@@ -49,7 +51,7 @@ export class UserAttributeValuesResolver {
     @Mutation( () => UserAttributeValue, { name: 'updateUserAttributeValue' } )
     updateUserAttributeValue(
         @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
-        @Args( 'value' ) valueBasic: ValueBasicInput,
+        @Args( 'value', { type: () => GraphQLJSON } ) valueBasic: AttributeTypeValue,
         @CurrentUser() currentUser: User
     ) {
         return this.userAttributeValuesService.update( id, valueBasic, currentUser );
@@ -60,7 +62,7 @@ export class UserAttributeValuesResolver {
     @Mutation( () => UserAttributeValue, { name: 'updateUserAttributeValueByApiUser' } )
     updateUserAttributeValueByApiUser(
         @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
-        @Args( 'value' ) valueBasic: ValueBasicInput,
+        @Args( 'value', { type: () => GraphQLJSON } ) valueBasic: AttributeTypeValue,
         @CurrentUser() currentUser: User
     ) {
         return this.userAttributeValuesService.updateByApiUser( id, valueBasic, currentUser );
