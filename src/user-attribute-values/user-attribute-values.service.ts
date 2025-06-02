@@ -1,10 +1,17 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+    BadRequestException,
+    Inject,
+    Injectable,
+    NotFoundException,
+    OnModuleInit,
+    UnauthorizedException
+} from '@nestjs/common';
 
-import { PrismaClient, UserAttribute } from '@prisma/client';
-import { isUUID } from 'class-validator';
+import { PrismaClient, UserAttribute }  from '@prisma/client';
+import { isUUID }                       from 'class-validator';
 
 import { CreateUserAttributeValueInput }    from './dto/create-user-attribute-value.input';
-import { UpdateUserAttributeValueInput }    from './dto/update-user-attribute-value.input';
+import { ValueBasicInput }                  from './dto/value-basic.dto';
 import { AttributeType }                    from '@user-attribute/enums/attribute-type.enum';
 import { PrismaException }                  from '@config/prisma-catch';
 import { User }                             from '@user/entities/user.entity';
@@ -94,24 +101,123 @@ export class UserAttributeValuesService implements OnModuleInit {
                     user: true
                 }
             });
+        } catch( error ) {
+            throw PrismaException.catch( error, 'Attribute Value' );
+        }
+    }
+
+
+    findAllByApiUser( currentUser: User ) {
+        return this.prisma.userAttributeValue.findMany({
+            where: {
+                userId: currentUser.apiUserId
+            }
+        });
+    }
+
+
+    findAllByUser( currentUser: User ) {
+        return this.prisma.userAttributeValue.findMany({
+            where: {
+                userId: currentUser.id
+            }
+        });
+    }
+
+
+    async findOne( id: string, currentUser: User ) {
+        const attribute = await this.prisma.userAttributeValue.findUnique({
+            where: {
+                id,
+                userId: currentUser.apiUserId
+            }
+        });
+
+        if ( !attribute ) throw new NotFoundException( `Attribute whit id ${id} not found` );
+
+        return attribute;
+    }
+
+
+    async update(
+        id          : string,
+        { value }   : ValueBasicInput,
+        currentUser : User
+    ) {
+        try {
+            const attribute = await this.prisma.userAttributeValue.findUnique({
+                where   : {
+                    id,
+                    userId: currentUser.id
+                },
+                include : {
+                    userAttribute   : true,
+                    user            : true
+                }
+            });
+
+            if ( !attribute ) throw new NotFoundException( `Attribute whit id ${id} not found` );
+
+            if ( !this.#isValidType( value, attribute.userAttribute.type as AttributeType )) {
+                throw new BadRequestException( `Invalid type for value. Expected ${attribute.userAttribute.type}.` );
+            }
+
+            const error = this.#validateConstraints( value, attribute.userAttribute );
+
+            if ( error ) throw new BadRequestException( error );
+
+            return await this.prisma.userAttributeValue.update({
+                where   : { id, userId: currentUser.id },
+                data    : { value },
+                include : {
+                    userAttribute   : true,
+                    user            : true
+                }
+            });
         } catch ( error ) {
             throw PrismaException.catch( error, 'Attribute Value' );
         }
     }
 
-    findAll() {
-        return `This action returns all userAttributeValues`;
+
+    async updateByApiUser(
+        id          : string,
+        { value }   : ValueBasicInput,
+        currentUser : User
+    ) {
+        try {
+            const attribute = await this.prisma.userAttributeValue.findUnique({
+                where   : { id },
+                include : {
+                    userAttribute   : true,
+                    user            : true
+                }
+            });
+
+            if ( !attribute ) throw new NotFoundException( `Attribute whit id ${id} not found` );
+            if ( attribute.user.apiUserId !== currentUser.apiUserId ) {
+                throw new UnauthorizedException( 'You are not authorized to update this attribute' );
+            }
+
+            if ( !this.#isValidType( value, attribute.userAttribute.type as AttributeType )) {
+                throw new BadRequestException( `Invalid type for value. Expected ${attribute.userAttribute.type}.` );
+            }
+
+            const error = this.#validateConstraints( value, attribute.userAttribute );
+
+            if ( error ) throw new BadRequestException( error );
+
+            return await this.prisma.userAttributeValue.update({
+                where   : { id },
+                data    : { value },
+                include : {
+                    userAttribute   : true,
+                    user            : true
+                }
+            });
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'Attribute Value' );
+        }
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} userAttributeValue`;
-    }
-
-    update(id: number, updateUserAttributeValueInput: UpdateUserAttributeValueInput) {
-        return `This action updates a #${id} userAttributeValue`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} userAttributeValue`;
-    }
 }
