@@ -191,8 +191,8 @@ type Mutation {
   removeUserRole(id: ID!): UserRole!
   removeManyUserRoles(ids: [ID!]!): AssignUsersRolesResponse!
   createUserAttributeValue(createUserAttributeValueInput: CreateUserAttributeValueInput!): UserAttributeValue!
-  updateUserAttributeValue(id: ID!, value: ValueBasicInput!): UserAttributeValue!
-  updateUserAttributeValueByApiUser(id: ID!, value: ValueBasicInput!): UserAttributeValue!
+  updateUserAttributeValue(id: ID!, value: JSON!): UserAttributeValue!
+  updateUserAttributeValueByApiUser(id: ID!, value: JSON!): UserAttributeValue!
 }
 
 input CreateSecretInput {
@@ -283,8 +283,4 @@ input CreateUserAttributeValueInput {
   value: JSON
   userId: ID!
   userAttributeId: ID!
-}
-
-input ValueBasicInput {
-  value: JSON
 }
