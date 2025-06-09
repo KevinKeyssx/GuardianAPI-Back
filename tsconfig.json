@@ -15,6 +15,7 @@
 			"@user-attribute/*" : ["src/user-attribute/*"],
 			"@auth/*"   		: ["src/auth/*"],
 			"@roles/*"			: ["src/roles/*"],
+            "@permissions/*"    : ["src/permissions/*"],
 			"@secrets/*"        : ["src/secrets/*"],
 			"@pwd-admin/*"		: ["src/pwd-admin/*"],
             "@config/*"         : ["src/config/*"],
