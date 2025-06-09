@@ -1,6 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 
-import { IsOptional, IsString, Length } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 
 
 @InputType()
@@ -16,5 +16,9 @@ export class CreateRoleInput {
     @Length( 0, 255 )
     @Field( () => String, { nullable: true })
     description?: string;
+
+    @IsBoolean()
+    @Field( () => Boolean )
+    isActive: boolean;
 
 }
