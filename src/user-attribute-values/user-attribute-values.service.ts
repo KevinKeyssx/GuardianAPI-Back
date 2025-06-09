@@ -10,9 +10,9 @@ import {
 import { PrismaClient, UserAttribute }  from '@prisma/client';
 import { isUUID }                       from 'class-validator';
 
+import { PrismaException }                      from '@config/prisma-catch';
 import { CreateUserAttributeValueInput }        from '@user-attribute-values/dto/create-user-attribute-value.input';
 import { AttributeType, AttributeTypeValue }    from '@user-attribute/enums/attribute-type.enum';
-import { PrismaException }                      from '@config/prisma-catch';
 import { User }                                 from '@user/entities/user.entity';
 
 
