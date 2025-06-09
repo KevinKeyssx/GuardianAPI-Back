@@ -1,6 +1,6 @@
 import { InputType, Field, PartialType, ID } from '@nestjs/graphql';
 
-import { IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
 import { CreateRoleInput } from '@roles/dto/create-role.input';
 
@@ -11,5 +11,10 @@ export class UpdateRoleInput extends PartialType( CreateRoleInput ) {
     @IsUUID()
     @Field( () => ID )
     id: string;
+
+    @IsOptional()
+    @IsBoolean()
+    @Field( () => Boolean, { nullable: true } )
+    isActive?: boolean;
 
 }
