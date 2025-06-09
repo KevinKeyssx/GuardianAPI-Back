@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
     provider = "prisma-client-js"
 }
@@ -33,17 +27,16 @@ enum DiscountType {
 model Plan {
     id              String   @id @default(uuid())
     name            PlanName
-    maxUsers        Int      // Máximo de usuarios permitidos (puede ser -1 para ilimitado)
-    maxRoles        Int      // Máximo de roles permitidos
+    maxUsers        Int
+    maxRoles        Int
     maxAttributes   Int
 
-    monthlyPrice    Float    // Precio mensual
-    yearlyPrice     Float    // Precio anual
-    discount        Float?  @default(0) // Porcentaje de descuento (opcional)
-    discountType    DiscountType?  // Tipo/Motivo del descuento (opcional)
+    monthlyPrice    Float
+    yearlyPrice     Float
+    discount        Float?  @default(0)
+    discountType    DiscountType? 
 
-    // Relación con User (solo para cuentas API)
-    apiUsers    User[]   // Un plan puede estar asociado a múltiples cuentas API
+    apiUsers    User[]
 
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
@@ -60,11 +53,9 @@ model User {
     avatar      String?
     phone       String?
 
-    planId      String?      // ID del plan asociado (opcional)
+    planId      String?
     plan        Plan?       @relation(fields: [planId], references: [id])
 
-    // Relación para identificar una cuenta API (padre) y sus usuarios asociados (hijos)
-    // Si el usuario es creado por una cuenta API, se almacena el id de esa cuenta en apiUserId.
     apiUserId   String?
     apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id], onDelete: Cascade)
     users       User[]      @relation("ApiUserHierarchy")
@@ -75,6 +66,7 @@ model User {
     attributes  UserAttribute[]
     attributeValues UserAttributeValue[]
     userRoles   UserRole[]
+    permissions Permission[]
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
@@ -90,8 +82,8 @@ model Role {
     id          String    @id @default(uuid())
     name        String
     description String?
+    isActive   Boolean  @default(true)
 
-    // Opcional: si el rol es específico para una cuenta API, se asocia a esa cuenta.
     userId   String?
     user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -108,7 +100,6 @@ model Role {
 
 model UserRole {
     id         String   @id @default(uuid())
-    isActive   Boolean  @default(true)
 
     user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId     String
@@ -119,7 +110,7 @@ model UserRole {
     createdAt DateTime @default(now())
     updatedAt DateTime? @updatedAt
 
-    @@index([userId, roleId, isActive])
+    @@index([userId, roleId])
     @@unique([userId, roleId])
 }
 
@@ -128,12 +119,20 @@ model Permission {
     id String @id @default(uuid())
     name String 
     description String?
+    isActive   Boolean  @default(true)
+
+    userId   String
+    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
     rolePermissions RolePermission[]
     userPermissions UserPermission[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    version     Int         @default(0)
+
     @@unique([name])
-    @@index([name])
+    @@index([name, userId, isActive])
 }
 
 
@@ -141,10 +140,13 @@ model RolePermission {
     id String @id @default(uuid())
     role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
     roleId String
-    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
     permissionId String
+    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
     @@unique([roleId, permissionId])
 }
 
@@ -153,8 +155,10 @@ model UserPermission {
     id String @id @default(uuid())
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
-    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
     permissionId String
+    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -239,6 +243,7 @@ model UserAttributeValue {
     @@unique([userAttributeId, userId])
 }
 
+
 model PwdAdmin {
     id              String   @id @default(uuid())
     password        String
@@ -246,7 +251,6 @@ model PwdAdmin {
     expiresAt       DateTime?
     willExpireAt    DateTime?
     isGuardian      Boolean  @default(false)
-    version         Int      @default(0)
     alertDay        Int?
     howOften        Int?
 
@@ -255,6 +259,7 @@ model PwdAdmin {
 
     createdAt       DateTime @default(now())
     updatedAt       DateTime @updatedAt
+    version         Int      @default(0)
 
     @@index([userId])
 }
