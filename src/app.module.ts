@@ -8,7 +8,6 @@ import { ScheduleModule }                   from '@nestjs/schedule';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
-
 import { AppController }                from './app.controller';
 import { AuthModule }                   from '@auth/auth.module';
 import { CommonModule }                 from '@common/common.module';
@@ -18,6 +17,7 @@ import { UserAttributeModule }          from '@user-attribute/user-attribute.mod
 import { SecretsModule }                from '@secrets/secrets.module';
 import { PwdAdminModule }               from '@pwd-admin/pwd-admin.module';
 import { PrismaModule }                 from '@prisma/prisma.module';
+import { PermissionsModule }            from '@permissions/permissions.module';
 import { UserRolesModule }              from '@user-roles/user-roles.module';
 import { UserAttributeValuesModule }    from '@user-attribute-values/user-attribute-values.module';
 
@@ -66,6 +66,7 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
         CommonModule,
         UserRolesModule,
         UserAttributeValuesModule,
+        PermissionsModule,
     ],
     controllers : [ AppController ],
     providers   : [],
