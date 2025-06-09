@@ -13,12 +13,13 @@ import { AuthModule }                   from '@auth/auth.module';
 import { CommonModule }                 from '@common/common.module';
 import { UserModule }                   from '@user/user.module';
 import { RolesModule }                  from '@roles/roles.module';
+import { UserRolesModule }              from '@user-roles/user-roles.module';
 import { UserAttributeModule }          from '@user-attribute/user-attribute.module';
 import { SecretsModule }                from '@secrets/secrets.module';
 import { PwdAdminModule }               from '@pwd-admin/pwd-admin.module';
 import { PrismaModule }                 from '@prisma/prisma.module';
 import { PermissionsModule }            from '@permissions/permissions.module';
-import { UserRolesModule }              from '@user-roles/user-roles.module';
+import { UserPermissionsModule }        from '@user-permissions/user-permissions.module';
 import { UserAttributeValuesModule }    from '@user-attribute-values/user-attribute-values.module';
 
 
@@ -67,6 +68,7 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
         UserRolesModule,
         UserAttributeValuesModule,
         PermissionsModule,
+        UserPermissionsModule,
     ],
     controllers : [ AppController ],
     providers   : [],
