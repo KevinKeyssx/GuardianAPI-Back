@@ -6,6 +6,7 @@ type Role {
   id: ID!
   name: String!
   description: String
+  isActive: Boolean
   userId: String
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -127,6 +128,11 @@ type ValidateUser {
   errorCode: String
 }
 
+type Permission {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
 type AssignUsersRolesResponse {
   success: [UserRole!]
   errors: [ErrorDetail!]
@@ -170,6 +176,8 @@ type Query {
   userAttribute(id: ID!): UserAttribute!
   userAttributeValues: [UserAttributeValue!]!
   userAttributeValue(id: ID!): UserAttributeValue!
+  permissions(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Permission!]!
+  permission(id: ID!): Permission!
 }
 
 type Mutation {
@@ -193,6 +201,9 @@ type Mutation {
   createUserAttributeValue(createUserAttributeValueInput: CreateUserAttributeValueInput!): UserAttributeValue!
   updateUserAttributeValue(id: ID!, value: JSON!): UserAttributeValue!
   updateUserAttributeValueByApiUser(id: ID!, value: JSON!): UserAttributeValue!
+  createPermission(createPermissionInput: CreatePermissionInput!): Permission!
+  updatePermission(updatePermissionInput: UpdatePermissionInput!): Permission!
+  removePermission(id: ID!): Permission!
 }
 
 input CreateSecretInput {
@@ -224,11 +235,13 @@ input UpdateUserInput {
 input CreateRoleInput {
   name: String!
   description: String
+  isActive: Boolean!
 }
 
 input UpdateRoleInput {
   name: String
   description: String
+  isActive: Boolean
   id: ID!
 }
 
@@ -283,4 +296,17 @@ input CreateUserAttributeValueInput {
   value: JSON
   userId: ID!
   userAttributeId: ID!
+}
+
+input CreatePermissionInput {
+  name: String!
+  description: String
+  isActive: Boolean!
+}
+
+input UpdatePermissionInput {
+  name: String
+  description: String
+  isActive: Boolean
+  id: ID!
 }
