@@ -30,6 +30,7 @@ type UserRole {
 
 type SecretEntity {
   id: ID!
+  name: String!
   expiresAt: DateTime
   willExpireAt: DateTime
   isActive: Boolean!
@@ -128,11 +129,6 @@ type ValidateUser {
   errorCode: String
 }
 
-type Permission {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
 type AssignUsersRolesResponse {
   success: [UserRole!]
   errors: [ErrorDetail!]
@@ -142,6 +138,27 @@ type ErrorDetail {
   userId: String
   roleId: String
   error: String!
+}
+
+type Permission {
+  id: ID!
+  name: String!
+  description: String
+  isActive: Boolean
+  userId: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type UserPermission {
+  """Unique identifier for the user-permission link"""
+  id: ID!
+
+  """The user who has the permission"""
+  user: User!
+
+  """The permission granted to the user"""
+  permission: Permission!
 }
 
 type UserAttributeValue {
@@ -178,6 +195,8 @@ type Query {
   userAttributeValue(id: ID!): UserAttributeValue!
   permissions(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Permission!]!
   permission(id: ID!): Permission!
+  userPermissions: [UserPermission!]!
+  userPermission(id: ID!): UserPermission!
 }
 
 type Mutation {
@@ -204,9 +223,12 @@ type Mutation {
   createPermission(createPermissionInput: CreatePermissionInput!): Permission!
   updatePermission(updatePermissionInput: UpdatePermissionInput!): Permission!
   removePermission(id: ID!): Permission!
+  createUserPermission(createUserPermissionInput: CreateUserPermissionInput!): UserPermission!
+  removeUserPermission(id: ID!): UserPermission!
 }
 
 input CreateSecretInput {
+  name: String!
   willExpireAt: DateTime
 }
 
@@ -309,4 +331,12 @@ input UpdatePermissionInput {
   description: String
   isActive: Boolean
   id: ID!
+}
+
+input CreateUserPermissionInput {
+  """User ID to assign permission to"""
+  userId: ID!
+
+  """Permission ID to assign"""
+  permissionId: ID!
 }
