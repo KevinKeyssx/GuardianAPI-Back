@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-import { Module }                           from '@nestjs/common';
+import { Module, UnauthorizedException }    from '@nestjs/common';
 import { GraphQLModule }                    from '@nestjs/graphql';
 import { JwtService }                       from '@nestjs/jwt';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -39,12 +39,12 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
 
                         if ( !token ) {
                             token = req.headers.authorization?.split(' ')[1];
-                            if ( !token ) throw new Error( 'Token needed' );
+                            if ( !token ) throw new UnauthorizedException( 'Token needed' );
                         }
 
-                        const payload = jwtService.decode(token); // Usa verify en lugar de decode para validar
-                        // const payload = jwtService.verify(token); // Usa verify en lugar de decode para validar
-                        if ( !payload ) throw new Error( 'Invalid token' );
+                        const payload = jwtService.decode( token ); // Usa verify en lugar de decode para validar
+                        // const payload = jwtService.verify( token ); // Usa verify en lugar de decode para validar
+                        if ( !payload ) throw new UnauthorizedException( 'Invalid token' );
 
                         return { user: payload };
                     } catch (error) {
