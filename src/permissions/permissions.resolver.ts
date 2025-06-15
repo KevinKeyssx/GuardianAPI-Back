@@ -1,14 +1,14 @@
-import { ParseUUIDPipe, UseGuards }                            from '@nestjs/common';
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { CurrentUser }              from '@auth/decorators/current-user.decorator';
 import { SecretAuthGuard }          from '@auth/guards/jwt-auth.guard';
 import { SearchArgs }               from '@common/dto/args/search.args';
 import { PaginationArgs }           from '@common/dto/args/pagination.args';
 import { PermissionsService }       from '@permissions/permissions.service';
-import { Permission }               from '@permissions/entities/permission.entity';
 import { CreatePermissionInput }    from '@permissions/dto/create-permission.input';
 import { UpdatePermissionInput }    from '@permissions/dto/update-permission.input';
+import { Permission }               from '@permissions/entity/permission.entity';
 import { User }                     from '@user/entities/user.entity';
 
 
