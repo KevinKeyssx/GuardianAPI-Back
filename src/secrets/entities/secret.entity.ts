@@ -6,6 +6,9 @@ export class SecretEntity {
     @Field(() => ID)
     id: string;
 
+    @Field(() => String)
+    name: string;
+
     @Field(() => Date, { nullable: true })
     expiresAt?: Date;
 
