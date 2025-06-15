@@ -6,7 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import { AppModule }    from './app.module';
 import { ENVS }         from '@config/envs';
 import { AuthModule }   from '@auth/auth.module';
-import { CsrfGuard } from '@auth/guards/csrf-token.guard';
+import { CsrfGuard }    from '@auth/guards/csrf-token.guard';
 
 
 ( async () => {
@@ -22,19 +22,19 @@ import { CsrfGuard } from '@auth/guards/csrf-token.guard';
 
     app.setGlobalPrefix( 'api/v1' )
     .useGlobalPipes( new ValidationPipe({ whitelist: true }))
-    .useGlobalGuards(new CsrfGuard())
-    .use(cookieParser())
+    .useGlobalGuards( new CsrfGuard() )
+    .use( cookieParser() )
     .enableCors({
-        origin: ( origin: string | undefined, callback: ( error: Error | null, origin?: string ) => void ) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, origin || '*');
+        credentials     : true,
+        methods         : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders  : ['Content-Type', 'Authorization', 'secret', 'X-CSRF-Token'],
+        origin          : ( origin: string | undefined, callback: ( error: Error | null, origin?: string ) => void ) => {
+            if ( !origin || allowedOrigins.includes( origin )) {
+                callback( null, origin || '*' );
             } else {
-                callback(new Error('Not allowed by CORS'));
+                callback( new Error( 'Not allowed by CORS' ));
             }
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'secret', 'X-CSRF-Token'],
+        }
     });
 
     AuthModule.setupSwagger( app );
