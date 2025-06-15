@@ -31,8 +31,7 @@ export class PermissionsService implements OnModuleInit {
             const userCount = await this.prisma.user.count({ where: { apiUserId: currentUser.apiUserId }});
 
             if ( userCount >= currentUser.plan!.maxRoles )
-                throw new BadRequestException( 'Maximum roles reached.' );
-
+                throw new BadRequestException( 'Maximum permissions reached.' );
 
             return await this.prisma.permission.create({
                 data: {
@@ -40,12 +39,11 @@ export class PermissionsService implements OnModuleInit {
                     userId: currentUser.id
                 }
             });
-
-            
-        } catch (error) {
+        } catch ( error ) {
             throw PrismaException.catch( error, 'Permission' );
         }
     }
+
 
     async findAll(
         currentUser             : User,
