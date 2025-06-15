@@ -92,7 +92,7 @@ export class SecretsService implements OnModuleInit {
             const secretHash    = this.#generateSecretHash( currentUser.id, secret );
             const createdSecret = await this.prisma.secret.create({
                 data: {
-                    willExpireAt   : createSecretInput.willExpireAt,
+                    ...createSecretInput,
                     apiUserId      : currentUser.id,
                     secret         : secretHash,
                 }
@@ -115,11 +115,8 @@ export class SecretsService implements OnModuleInit {
 
 
     async updateExpiresAt(
-        currentUser : User,
-        {
-            id,
-            willExpireAt
-        } : UpdateSecretInput
+        currentUser         : User,
+        { id, willExpireAt }: UpdateSecretInput
     ): Promise<Secret> {
         try {
             const secret = await this.prisma.secret.findUnique({
@@ -157,6 +154,7 @@ export class SecretsService implements OnModuleInit {
         const secrets = await this.prisma.secret.findMany({
             select: {
                 id              : true,
+                name            : true,
                 willExpireAt    : true,
                 expiresAt       : true,
                 isActive        : true,
