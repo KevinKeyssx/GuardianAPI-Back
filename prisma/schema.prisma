@@ -168,6 +168,7 @@ model UserPermission {
 
 model Secret {
     id              String      @id @default(uuid())
+    name            String
     secret          String      @unique
     expiresAt       DateTime?
     willExpireAt    DateTime?
