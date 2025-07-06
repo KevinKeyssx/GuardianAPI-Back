@@ -73,8 +73,8 @@ export class AuthService extends PrismaClient implements OnModuleInit {
         { role, apiUserId, email, password, nickname, avatar, name }: SignUpDto,
         isVerified: boolean = false
     ): Promise<AuthResponse> {
-        let roleId  : string    | null = null;
-        let user    : User      | null = null;
+        let roleId  : string | null = null;
+        let user    : User   | null = null;
 
         try {
             if ( apiUserId ) {
