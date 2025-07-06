@@ -203,6 +203,7 @@ type Mutation {
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
   expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
   removeSecret(id: String!): Boolean!
+  createUser(createUserInput: CreateUserInput!, file: Upload): UserResponse!
   updateUser(updateUserInput: UpdateUserInput!): UserResponse!
   removeUser(id: ID): Boolean!
   createRole(createRoleInput: CreateRoleInput!): Role!
@@ -237,21 +238,22 @@ input UpdateSecretInput {
   id: String!
 }
 
-input UpdateUserInput {
-  id: ID!
-  email: String
+input CreateUserInput {
+  email: String!
   nickname: String
   name: String
   phone: String
   birthdate: DateTime
-  avatar: String
-  googleId: String
-  microsoftId: String
-  facebookId: String
-  githubId: String
-  appleId: String
-  otherId: String
-  isActive: Boolean
+  apiUserId: ID
+  isActive: Boolean = true
+  isVerified: Boolean = false
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
+input UpdateUserInput {
+  id: ID!
 }
 
 input CreateRoleInput {
