@@ -17,6 +17,7 @@ interface EnvVars {
     REDIS_HOST              : string;
     REDIS_PORT              : number;
     REDIS_PASSWORD          : string;
+    FILE_MANAGER_URL        : string;
 }
 
 const envsSchema = joi.object({
@@ -33,7 +34,8 @@ const envsSchema = joi.object({
     FREE_PLAN_ID            : joi.string().required(),
     REDIS_HOST              : joi.string().required(),
     REDIS_PORT              : joi.number().required(),
-    REDIS_PASSWORD          : joi.string().required()
+    REDIS_PASSWORD          : joi.string().required(),
+    FILE_MANAGER_URL        : joi.string().required()
 })
 .unknown( true );
 
@@ -61,4 +63,5 @@ export const ENVS = {
     REDIS_HOST              : envVars.REDIS_HOST,
     REDIS_PORT              : envVars.REDIS_PORT,
     REDIS_PASSWORD          : envVars.REDIS_PASSWORD,
+    FILE_MANAGER_URL        : envVars.FILE_MANAGER_URL
 }
