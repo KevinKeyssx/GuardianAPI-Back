@@ -8,9 +8,12 @@ import { ScheduleModule }                   from '@nestjs/schedule';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
+import { GraphQLUpload } from 'graphql-upload-minimal';
+
 import { AppController }                from './app.controller';
 import { AuthModule }                   from '@auth/auth.module';
 import { CommonModule }                 from '@common/common.module';
+import { UploadFileService }            from '@common/services/filemanager/upload-file.service';
 import { UserModule }                   from '@user/user.module';
 import { RolesModule }                  from '@roles/roles.module';
 import { UserRolesModule }              from '@user-roles/user-roles.module';
@@ -27,18 +30,28 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
     imports     : [
         GraphQLModule.forRootAsync<ApolloDriverConfig>({
             driver      : ApolloDriver,
-            imports     : [ AuthModule ],
+            imports     : [
+                GraphQLModule.forRoot<ApolloDriverConfig>({
+                    driver          : ApolloDriver,
+                    autoSchemaFile  : join(process.cwd(), 'src/schema.gql'),
+                    resolvers       : { Upload: GraphQLUpload },
+                    context         : ({ req, res }) => ({ req, res }),
+                }),
+                AuthModule
+            ],
             inject      : [ JwtService ],
             useFactory  : async( jwtService: JwtService ) => ({
                 playground      : false,
                 autoSchemaFile  : join( process.cwd(), 'src/schema.gql' ),
                 plugins         : [ ApolloServerPluginLandingPageLocalDefault() ],
-                context: ({ req }) => {
+                context         : ({ req }) => {
                     try {
                         let token = req.cookies?.token;
 
                         if ( !token ) {
                             token = req.headers.authorization?.split(' ')[1];
+                            console.log('🚀 ~ file: app.module.ts:39 ~ token:', token)
+
                             if ( !token ) throw new UnauthorizedException( 'Token needed' );
                         }
 
@@ -49,7 +62,7 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
                         return { user: payload };
                     } catch (error) {
                         console.error('Error in GraphQL context:', error.message);
-                        throw error;
+                        throw new UnauthorizedException( 'Invalid token' );
                     }
                 },
             }),
@@ -71,6 +84,6 @@ import { UserAttributeValuesModule }    from '@user-attribute-values/user-attrib
         UserPermissionsModule,
     ],
     controllers : [ AppController ],
-    providers   : [],
+    providers   : [ UploadFileService ],
 })
 export class AppModule {}
