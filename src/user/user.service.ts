@@ -8,23 +8,28 @@ import {
 } from '@nestjs/common';
 
 import { PrismaClient } from '@prisma/client';
+import { FileUpload }   from 'graphql-upload-minimal';
 
-import { PaginationArgs }   from '@common/dto/args/pagination.args';
-import { SearchArgs }       from '@common/dto/args/search.args';
-import { PrismaException }  from '@config/prisma-catch';
-import { UpdateUserInput }  from '@user/dto/update-user.input';
-import { UserResponse }     from '@user/entities/user-response.';
-import { User }             from '@user/entities/user.entity';
+import { PaginationArgs }       from '@common/dto/args/pagination.args';
+import { SearchArgs }           from '@common/dto/args/search.args';
+import { UploadFileService }    from '@common/services/filemanager/upload-file.service';
+import { PrismaException }      from '@config/prisma-catch';
+import { UpdateUserInput }      from '@user/dto/update-user.input';
+import { UserResponse }         from '@user/entities/user-response.';
+import { User }                 from '@user/entities/user.entity';
+import { CreateUserInput }      from '@user/dto/create-user.input';
 
 
 @Injectable()
 export class UserService implements OnModuleInit {
 
+	#logger = new Logger( UserService.name );
+
     constructor(
-        @Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient
+        @Inject( 'PRISMA_CLIENT' ) private readonly prisma: PrismaClient,
+        private readonly uploadFileService: UploadFileService,
     ) {}
 
-	#logger = new Logger( UserService.name );
 
     onModuleInit() {
 		this.prisma.$connect();
@@ -32,8 +37,30 @@ export class UserService implements OnModuleInit {
 	}
 
 
+    async create(
+        createUserInput : CreateUserInput,
+        currentUser     : User,
+        file?           : FileUpload
+    ) {
+        const avatar = file ? ( await this.uploadFileService.sendFile( file )).secure_url : null;
+
+        try {
+            const user = await this.prisma.user.create({
+                data: {
+                    ...createUserInput,
+                    apiUserId: currentUser.id,
+                    avatar
+                }
+            });
+            return user;
+        } catch ( error ) {
+            throw PrismaException.catch( error, 'User' );
+        }
+    }
+
+
     #guardianIncludes = () => ({
-        userRoles   : {
+        userRoles: {
             include: {
                 role: true,
                 user: true
@@ -46,8 +73,8 @@ export class UserService implements OnModuleInit {
 
     #getUserResponse = ( user: User ): UserResponse => ({
         ...user,
-        secret      : user.secrets?.[0] || null,
-        pwdAdmin    : user.pwdAdmins?.[0] || null,
+        secret      : user.secrets?.[0]     || null,
+        pwdAdmin    : user.pwdAdmins?.[0]   || null,
     }) as UserResponse;
 
 
