@@ -29,7 +29,9 @@ import { UserAttributeService } from '@user-attribute/user-attribute.service';
 import { UserAttribute }        from '@user-attribute/entities/user-attribute.entity';
 import { ValidateUser }         from '@user/entities/validate-user';
 import { ValidateTokenArgs }    from '@user/dto/validate-token.args';
+import { CreateUserInput }      from '@user/dto/create-user.input';
 
+import { GraphQLUpload, FileUpload } from 'graphql-upload-minimal';
 
 @Resolver( () => UserResponse )
 export class UserResolver {
@@ -42,6 +44,17 @@ export class UserResolver {
 
         // @Inject('REDIS') private readonly redis: Redis
     ) {}
+
+
+    @UseGuards( SecretAuthGuard( true ))
+    @Mutation( () => UserResponse )
+    createUser(
+        @Args( 'createUserInput' ) createUserInput: CreateUserInput,
+        @CurrentUser() currentUser: User,
+        @Args({ name: 'file', type: () => GraphQLUpload, nullable: true }) file?: FileUpload,
+    ) {
+        return this.userService.create( createUserInput, currentUser, file );
+    }
 
 
     @UseGuards( SecretAuthGuard( false ))
