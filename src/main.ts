@@ -1,7 +1,8 @@
 import { Logger, ValidationPipe }   from '@nestjs/common';
 import { NestFactory }              from '@nestjs/core';
 
-import * as cookieParser from 'cookie-parser';
+import * as cookieParser        from 'cookie-parser';
+import { graphqlUploadExpress } from 'graphql-upload-minimal';
 
 import { AppModule }    from './app.module';
 import { ENVS }         from '@config/envs';
@@ -38,6 +39,7 @@ import { CsrfGuard }    from '@auth/guards/csrf-token.guard';
     });
 
     AuthModule.setupSwagger( app );
+    app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })); // Configura tus límites
 
     await app.listen( ENVS.PORT );
     logger.log( `GuardianAPI listening on port ${ ENVS.PORT }` );
