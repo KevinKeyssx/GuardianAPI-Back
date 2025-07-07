@@ -7,9 +7,9 @@ import {
     ResolveField,
     Parent,
     Context
-}                                           from '@nestjs/graphql';
-import { Inject, ParseUUIDPipe, UseGuards } from '@nestjs/common';
-import { JwtService }                       from '@nestjs/jwt';
+}                                   from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { JwtService }               from '@nestjs/jwt';
 
 // import Redis from 'ioredis';
 
@@ -133,15 +133,15 @@ export class UserResolver {
     //     return this.userService.findAll( user, pagination, search );
     // }
 
-    @ResolveField( () => Number, {
-        name: 'total',
-        middleware  : [ hideUserMiddleware ]
-    })
-    getUserRelations(
-        @CurrentUser() user: User,
-    ) {
-        return this.userService.totalUsers( user );
-    }
+    // @ResolveField( () => Number, {
+    //     name: 'total',
+    //     middleware  : [ hideUserMiddleware ]
+    // })
+    // getUserRelations(
+    //     @CurrentUser() user: User,
+    // ) {
+    //     return this.userService.totalUsers( user );
+    // }
 
 
     @ResolveField( () => [UserAttribute], { name: 'attributes' })
