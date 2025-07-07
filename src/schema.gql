@@ -85,7 +85,6 @@ type UserResponse {
   secret: SecretEntity
   pwdAdmin: PwdAdmin
   roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
-  total: Float!
   attributes(keys: [String!]): [UserAttribute!]!
 }
 
@@ -182,7 +181,6 @@ type UserAttributeValue {
 }
 
 type Query {
-  secret: [SecretEntity!]!
   users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
   user(id: ID): UserResponse!
   validateToken(token: String!, refresh: Boolean = false): ValidateUser!
@@ -191,6 +189,7 @@ type Query {
   userAttributes(keys: [String!]): [UserAttribute!]!
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
   userAttribute(id: ID!): UserAttribute!
+  secret: [SecretEntity!]!
   userAttributeValues: [UserAttributeValue!]!
   userAttributeValue(id: ID!): UserAttributeValue!
   permissions(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Permission!]!
@@ -200,9 +199,6 @@ type Query {
 }
 
 type Mutation {
-  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
-  expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
-  removeSecret(id: String!): Boolean!
   createUser(createUserInput: CreateUserInput!, file: Upload): UserResponse!
   updateUser(updateUserInput: UpdateUserInput!): UserResponse!
   removeUser(id: ID): Boolean!
@@ -212,6 +208,9 @@ type Mutation {
   createUserAttribute(createUserAttributeInput: CreateUserAttributeInput!): UserAttribute!
   updateUserAttribute(updateUserAttributeInput: UpdateUserAttributeInput!): UserAttribute!
   removeUserAttribute(id: ID!): UserAttribute!
+  generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
+  expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
+  removeSecret(id: String!): Boolean!
   activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
   assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
@@ -226,16 +225,6 @@ type Mutation {
   removePermission(id: ID!): Permission!
   createUserPermission(createUserPermissionInput: CreateUserPermissionInput!): UserPermission!
   removeUserPermission(id: ID!): UserPermission!
-}
-
-input CreateSecretInput {
-  name: String!
-  willExpireAt: DateTime
-}
-
-input UpdateSecretInput {
-  willExpireAt: DateTime!
-  id: String!
 }
 
 input CreateUserInput {
@@ -299,6 +288,16 @@ input UpdateUserAttributeInput {
   minDate: String
   id: ID!
   value: JSON
+}
+
+input CreateSecretInput {
+  name: String!
+  willExpireAt: DateTime
+}
+
+input UpdateSecretInput {
+  willExpireAt: DateTime!
+  id: String!
 }
 
 input UpdatePwdAdminInput {
