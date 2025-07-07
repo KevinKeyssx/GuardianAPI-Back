@@ -38,6 +38,7 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
+    "file-type": "^21.0.0",
     "graphql": "^16.10.0",
     "graphql-scalars": "^1.24.1",
     "graphql-upload": "^17.0.0",
