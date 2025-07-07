@@ -9,6 +9,9 @@ import { ENVS }                     from '@config/envs';
 import { CloudinaryUploadResponse } from '@common/services/filemanager/model-file.model';
 
 
+import { fileTypeFromBuffer } from 'file-type';
+
+
 declare const Blob: {
     prototype: Blob;
     new(blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
@@ -22,19 +25,51 @@ declare const File: {
 const pipeline = util.promisify(stream.pipeline);
 
 @Injectable()
-export class UploadFileService {
-    private readonly logger             = new Logger(UploadFileService.name);
-    private readonly DEFAULT_FOLDER     = 'guardianapi';
-    private readonly DEFAULT_FORMAT     = 'avif';
-    private readonly DEFAULT_QUALITY    = 50;
+export class FileManagerService {
+    readonly #logger            = new Logger( FileManagerService.name );
+    readonly #DEFAULT_FOLDER    = 'guardian_api';
+    readonly #DEFAULT_FORMAT    = 'avif';
+    readonly #DEFAULT_QUALITY   = 50;
 
     constructor() {}
 
-    async sendFile(
+
+    async delete( avatar: string, storage: string ) {
+        const avatarId  = avatar.split( '/' ).pop()?.split( '.' )[0];
+        const url       = `${this.#DEFAULT_FOLDER}|${storage}|${avatarId}`;
+
+        try {
+            const response = await fetch( url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if ( !response.ok ) {
+                throw new BadRequestException( 'Error al eliminar el archivo' );
+            }
+
+            const data = await response.json();
+
+            if ( data.result !== 'ok' ) {
+                throw new BadRequestException( 'Error al eliminar el archivo' );
+            }
+
+            return true;
+        }
+        catch ( error ) {
+            throw new BadRequestException( 'Error al eliminar el archivo' );
+        }
+    }
+
+
+    async save(
         file    : FileUpload,
-        folder  : string = this.DEFAULT_FOLDER,
-        format  : string = this.DEFAULT_FORMAT,
-        quality : number = this.DEFAULT_QUALITY
+        storage : string,
+        folder  : string = this.#DEFAULT_FOLDER,
+        format  : string = this.#DEFAULT_FORMAT,
+        quality : number = this.#DEFAULT_QUALITY
     ): Promise<CloudinaryUploadResponse> {
         try {
             const formData          = new FormData();
@@ -51,11 +86,13 @@ export class UploadFileService {
                 })
             );
             const fileBuffer    = Buffer.concat( chunks );
-            const fileBlob      = new File([ fileBuffer ], file.filename, { type: file.mimetype });
+            const detectedFileType = await fileTypeFromBuffer(fileBuffer);
+            const actualMimeType = detectedFileType ? detectedFileType.mime : file.mimetype;
+            const fileBlob      = new File([ fileBuffer ], file.filename, { type: actualMimeType });
 
             formData.append( 'file', fileBlob, file.filename );
 
-            const url = `${ENVS.FILE_MANAGER_URL}${folder}?format=${format}&quality=${quality}`;
+            const url = `${ENVS.FILE_MANAGER_URL}${folder}|${storage}?format=${format}&quality=${quality}`;
 
             const response = await fetch( url, {
                 method  : 'POST',
@@ -65,14 +102,19 @@ export class UploadFileService {
             if ( !response.ok ) {
                 const errorBody = await response.text();
                 const message   = `Error al subir el archivo: ${response.status} ${response.statusText} - ${errorBody}`;
-                this.logger.error( message );
+                this.#logger.error( message );
                 throw new BadRequestException( message );
             }
 
             return await response.json() as CloudinaryUploadResponse;
         } catch ( error ) {
             const message = 'Error al subir el archivo';
-            this.logger.error( message, error );
+            this.#logger.error( message, error );
+
+            if ( error.code == 502 ) {
+                return this.save( file, storage );
+            }
+
             throw new BadRequestException( message );
         }
     }
