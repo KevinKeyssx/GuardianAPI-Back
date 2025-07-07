@@ -12,7 +12,7 @@ import { FileUpload }   from 'graphql-upload-minimal';
 
 import { PaginationArgs }       from '@common/dto/args/pagination.args';
 import { SearchArgs }           from '@common/dto/args/search.args';
-import { UploadFileService }    from '@common/services/filemanager/upload-file.service';
+import { FileManagerService }   from '@common/services/filemanager/upload-file.service';
 import { PrismaException }      from '@config/prisma-catch';
 import { UpdateUserInput }      from '@user/dto/update-user.input';
 import { UserResponse }         from '@user/entities/user-response.';
@@ -27,7 +27,7 @@ export class UserService implements OnModuleInit {
 
     constructor(
         @Inject( 'PRISMA_CLIENT' ) private readonly prisma: PrismaClient,
-        private readonly uploadFileService: UploadFileService,
+        private readonly fileManagerService: FileManagerService,
     ) {}
 
 
@@ -42,7 +42,7 @@ export class UserService implements OnModuleInit {
         currentUser     : User,
         file?           : FileUpload
     ) {
-        const avatar = file ? ( await this.uploadFileService.sendFile( file )).secure_url : null;
+        const avatar = file ? ( await this.fileManagerService.save( file, currentUser.id )).secure_url : null;
 
         try {
             const user = await this.prisma.user.create({
@@ -52,6 +52,7 @@ export class UserService implements OnModuleInit {
                     avatar
                 }
             });
+
             return user;
         } catch ( error ) {
             throw PrismaException.catch( error, 'User' );
@@ -142,16 +143,26 @@ export class UserService implements OnModuleInit {
 
 
     async update(
-        currentUser: User,
-        updateUserInput: UpdateUserInput
+        currentUser     : User,
+        updateUserInput : UpdateUserInput,
+        file?           : FileUpload
     ): Promise<UserResponse> {
+        let avatar : string | null = null;
+
         const existingUser = await this.findOne( currentUser, updateUserInput.id );
 
         try {
+            if ( file && existingUser.avatar ) {
+                await this.fileManagerService.delete( existingUser.avatar, currentUser.id );
+
+                avatar = ( await this.fileManagerService.save( file, existingUser.id )).secure_url;
+            }
+
             const user = await this.prisma.user.update({
                 where   : { id: updateUserInput.id, version: existingUser.version },
                 data    : {
                     ...updateUserInput,
+                    avatar,
                     version: existingUser.version + 1,
                 },
                 include: this.#guardianIncludes()
@@ -165,7 +176,11 @@ export class UserService implements OnModuleInit {
 
 
     async remove( currentUser: User, id: string ):  Promise<boolean> {
-        await this.findOne( currentUser, id );
+        const user = await this.findOne( currentUser, id );
+
+        if ( user.avatar ) {
+            await this.fileManagerService.delete( user.avatar, currentUser.id );
+        }
 
         try {
             return await this.prisma.user.delete({ where: { id }}) !== null;
