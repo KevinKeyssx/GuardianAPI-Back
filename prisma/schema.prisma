@@ -73,9 +73,9 @@ model User {
     version     Int       @default(0)
     isVerified  Boolean   @default(false)
 
-
     @@index([isActive, apiUserId, email])
-    @@unique([email, nickname, apiUserId])
+    @@unique([email, apiUserId])
+    @@unique([nickname, apiUserId])
 }
 
 model Role {
@@ -197,18 +197,18 @@ enum AttributeType {
 
 model UserAttribute {
     id          String    @id @default(uuid())
-    key         String    // Nombre del atributo (ej.: "points")
-    defaultValue Json?      // Valor por defecto (ej.: "100")
+    key         String
+    defaultValue Json?
     isActive    Boolean   @default(true)
 
-    type        AttributeType  // Tipo de dato (ej.: STRING, NUMBER, BOOLEAN, DECIMAL, LIST)
+    type        AttributeType
 
-    min         Float?    // Valor mínimo permitido (para números y decimales)
-    max         Float?    // Valor máximo permitido (para números y decimales)
-    minLength   Int?      // Longitud mínima (para strings y listas)
-    maxLength   Int?      // Longitud máxima (para strings y listas)
-    pattern     String?   // Expresión regular para validaciones (opcional)
-    required    Boolean   @default(false) // Indica si es obligatorio
+    min         Float?
+    max         Float?
+    minLength   Int?
+    maxLength   Int?
+    pattern     String?
+    required    Boolean   @default(false)
     maxDate     DateTime?
     minDate     DateTime?
 
