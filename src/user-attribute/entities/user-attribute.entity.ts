@@ -3,6 +3,7 @@ import { ObjectType, Field } from '@nestjs/graphql';
 import { GraphQLJSON  } from 'graphql-scalars';
 
 import { AttributeType } from '@user-attribute/enums/attribute-type.enum';
+import { UserAttributeValue } from '@user-attribute-values/entities/user-attribute-value.entity';
 
 
 @ObjectType()
@@ -43,5 +44,11 @@ export class UserAttribute {
 
     @Field( () => Date, {  nullable: true })
     minDate?: Date;
+
+    @Field( () => [UserAttributeValue], { nullable: true })
+    values?: UserAttributeValue[];
+
+    @Field(() => GraphQLJSON, { description: 'Value of the user attribute value', nullable: true })
+    value?: any;
 
 }
