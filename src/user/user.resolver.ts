@@ -121,29 +121,6 @@ export class UserResolver {
     }
 
 
-    // @ResolveField( () => [UserResponse], {
-    //     name        : 'users',
-    //     middleware  : [ hideUserMiddleware ]
-    // })
-    // getUserRelations(
-    //     @Parent() user      : User,
-    //     @Args() search      : SearchArgs,
-    //     @Args() pagination  : PaginationArgs
-    // ) {
-    //     return this.userService.findAll( user, pagination, search );
-    // }
-
-    // @ResolveField( () => Number, {
-    //     name: 'total',
-    //     middleware  : [ hideUserMiddleware ]
-    // })
-    // getUserRelations(
-    //     @CurrentUser() user: User,
-    // ) {
-    //     return this.userService.totalUsers( user );
-    // }
-
-
     @ResolveField( () => [UserAttribute], { name: 'attributes' })
     getAttributes(
         @Parent() user      : User,
@@ -151,13 +128,7 @@ export class UserResolver {
         // @Context() context  : any,
         @Args() attributes  : AttributesArgs
     ) {
-        console.log('🚀 ~ file: user.resolver.ts:128 ~ attributes:', attributes)
-        // console.log('🚀 ~ file: user.resolver.ts:126 ~ context:', context)
-        // console.log('🚀 ~ file: user.resolver.ts:127 ~ attributes:', attributes)
-        // return this.userAttributeService.findByKeys( user, user.id, attributes );
         return this.userAttributeService.findByKeys( user.id, attributes );
-        // return this.userAttributeService.findByKeys( user, context.userId, attributes );
-        // return this.userAttributeService.findByKeys( user, user.apiUserId ?? user.id, attributes );
     }
 
 
