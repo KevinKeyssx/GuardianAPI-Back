@@ -104,22 +104,6 @@ export class UserService implements OnModuleInit {
     }
 
 
-    async totalUsers(
-        currentUser: User
-    ): Promise<number> {
-        const totalUsers = await this.prisma.user.count({
-            where: {
-                apiUserId: currentUser.id,
-                isActive: true
-            }
-        });
-        console.log('🚀 ~ file: user.service.ts:80 ~ users:', totalUsers)
-
-        return totalUsers
-        // return users.map( user => this.#getUserResponse( user ));
-    }
-
-
     async findOne( currentUser: User, id: string ): Promise<UserResponse> {
         if ( currentUser.id !== id && currentUser.apiUserId ) {
             throw new ForbiddenException( 'You are not allowed to access this user.' );
