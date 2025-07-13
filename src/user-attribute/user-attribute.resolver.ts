@@ -1,14 +1,14 @@
 import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
 import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
-import { SecretAuthGuard }                  from '@auth/guards/jwt-auth.guard';
-import { CurrentUser }                      from '@auth/decorators/current-user.decorator';
-import { AttributesArgs }                   from '@common/dto/args/attributes.args';
-import { UserAttributeService }             from '@user-attribute/user-attribute.service';
-import { UserAttribute }                    from '@user-attribute/entities/user-attribute.entity';
-import { CreateUserAttributeInput }         from '@user-attribute/dto/create-user-attribute.input';
-import { UpdateUserAttributeInput }         from '@user-attribute/dto/update-user-attribute.input';
-import { User }                             from '@user/entities/user.entity';
+import { SecretAuthGuard }          from '@auth/guards/jwt-auth.guard';
+import { CurrentUser }              from '@auth/decorators/current-user.decorator';
+import { AttributesArgs }           from '@common/dto/args/attributes.args';
+import { UserAttributeService }     from '@user-attribute/user-attribute.service';
+import { UserAttribute }            from '@user-attribute/entities/user-attribute.entity';
+import { CreateUserAttributeInput } from '@user-attribute/dto/create-user-attribute.input';
+import { UpdateUserAttributeInput } from '@user-attribute/dto/update-user-attribute.input';
+import { User }                     from '@user/entities/user.entity';
 
 
 @Resolver( () => UserAttribute )
