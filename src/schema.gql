@@ -88,6 +88,31 @@ type UserResponse {
   attributes(keys: [String!]): [UserAttribute!]!
 }
 
+type UserAttributeValue {
+  """Id of the user attribute value"""
+  id: ID!
+
+  """User of the user attribute value"""
+  user: User!
+
+  """User attribute of the user attribute value"""
+  userAttribute: UserAttribute!
+
+  """Value of the user attribute value"""
+  value: JSON!
+
+  """Created at of the user attribute value"""
+  createdAt: DateTime!
+
+  """Updated at of the user attribute value"""
+  updatedAt: DateTime!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
 type UserAttribute {
   key: String!
   defaultValue: JSON
@@ -101,12 +126,11 @@ type UserAttribute {
   required: Boolean
   maxDate: DateTime
   minDate: DateTime
-}
+  values: [UserAttributeValue!]
 
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-"""
-scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+  """Value of the user attribute value"""
+  value: JSON
+}
 
 """Tipos posibles de atributos"""
 enum AttributeType {
@@ -158,26 +182,6 @@ type UserPermission {
 
   """The permission granted to the user"""
   permission: Permission!
-}
-
-type UserAttributeValue {
-  """Id of the user attribute value"""
-  id: ID!
-
-  """User of the user attribute value"""
-  user: User!
-
-  """User attribute of the user attribute value"""
-  userAttribute: UserAttribute!
-
-  """Value of the user attribute value"""
-  value: JSON!
-
-  """Created at of the user attribute value"""
-  createdAt: DateTime!
-
-  """Updated at of the user attribute value"""
-  updatedAt: DateTime!
 }
 
 type Query {
