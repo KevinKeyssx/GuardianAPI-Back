@@ -204,7 +204,7 @@ type Query {
 
 type Mutation {
   createUser(createUserInput: CreateUserInput!, file: Upload): UserResponse!
-  updateUser(updateUserInput: UpdateUserInput!): UserResponse!
+  updateUser(updateUserInput: UpdateUserInput!, file: Upload): UserResponse!
   removeUser(id: ID): Boolean!
   createRole(createRoleInput: CreateRoleInput!): Role!
   updateRole(updateRoleInput: UpdateRoleInput!): Role!
