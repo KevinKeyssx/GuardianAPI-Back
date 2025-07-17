@@ -86,7 +86,8 @@ export class UserResolver {
     @Mutation( () => UserResponse )
     updateUser(
         @CurrentUser() user: User,
-        @Args( 'updateUserInput' ) updateUserInput: UpdateUserInput
+        @Args( 'updateUserInput' ) updateUserInput: UpdateUserInput,
+        @Args({ name: 'file', type: () => GraphQLUpload, nullable: true }) file?: FileUpload,
     ) {
         return this.userService.update( user, updateUserInput );
     }
