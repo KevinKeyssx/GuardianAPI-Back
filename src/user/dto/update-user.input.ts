@@ -1,16 +1,21 @@
-import { Field, ID, InputType } from '@nestjs/graphql';
-import { PartialType }          from '@nestjs/swagger';
+import { Field, ID, InputType, PartialType } from '@nestjs/graphql';
 
-import { IsUUID } from 'class-validator';
+import { IsEmail, IsOptional, IsUUID, Length } from 'class-validator';
 
-import { CreateUserInput } from './create-user.input';
+import { BaseUserInput } from '@user/dto/base-user.input';
 
 
 @InputType()
-export class UpdateUserInput extends PartialType( CreateUserInput ) {
+export class UpdateUserInput extends PartialType( BaseUserInput ) {
 
     @Field( () => ID )
     @IsUUID()
     id: string;
+
+    @Field( () => String, { nullable: true } )
+    @IsEmail()
+    @IsOptional()
+    @Length( 1, 80 )
+    email?: string;
 
 }
