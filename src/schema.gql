@@ -232,7 +232,6 @@ type Mutation {
 }
 
 input CreateUserInput {
-  email: String!
   nickname: String
   name: String
   phone: String
@@ -240,13 +239,22 @@ input CreateUserInput {
   apiUserId: ID
   isActive: Boolean = true
   isVerified: Boolean = false
+  email: String!
 }
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
 
 input UpdateUserInput {
+  nickname: String
+  name: String
+  phone: String
+  birthdate: DateTime
+  apiUserId: ID
+  isActive: Boolean = true
+  isVerified: Boolean = false
   id: ID!
+  email: String
 }
 
 input CreateRoleInput {
