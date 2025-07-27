@@ -10,29 +10,13 @@ import { ENVS }                     from '@config/envs';
 import { CloudinaryUploadResponse } from '@common/services/filemanager/model-file.model';
 
 
-declare const Blob: {
-    prototype: Blob;
-    new( blobParts?: BlobPart[], options?: BlobPropertyBag ): Blob;
-};
-
-
-declare const File: {
-    prototype: File;
-    new(
-        fileBits    : BlobPart[],
-        fileName    : string,
-        options?    : FilePropertyBag
-    ): File;
-};
-
-
 const pipeline = util.promisify( stream.pipeline );
 
 
 @Injectable()
 export class FileManagerService {
     readonly #logger            = new Logger( FileManagerService.name );
-    readonly #DEFAULT_FOLDER    = 'guardian_api';
+    readonly #DEFAULT_FOLDER    = 'guardian_api|users';
     readonly #DEFAULT_FORMAT    = 'avif';
     readonly #DEFAULT_QUALITY   = 50;
 
@@ -43,7 +27,7 @@ export class FileManagerService {
      * Deletes a file from the file manager with retry logic
      * Attempts to delete the file up to 2 times before throwing an error
      */
-    async delete( avatar: string, storage: string ) {
+    async delete( avatar: string ) {
         const maxRetries = 2;
         let lastError: any;
 
@@ -51,7 +35,7 @@ export class FileManagerService {
             try {
                 this.#logger.log( `Attempt ${attempt} from ${maxRetries} to delete the file: ${avatar}` );
 
-                return await this.#deleteFile( avatar, storage );
+                return await this.#deleteFile( avatar );
             } catch ( error ) {
                 lastError = error;
                 this.#logger.warn( `Attempt ${attempt} failed for deleting file ${avatar}:`, error.message );
@@ -68,13 +52,12 @@ export class FileManagerService {
         throw new BadRequestException( message );
     }
 
-
     /**
      * Private method that handles the actual file deletion logic
      */
-    async #deleteFile( avatar: string, storage: string ): Promise<boolean> {
+    async #deleteFile( avatar: string ): Promise<boolean> {
         const avatarId  = avatar.split( '/' ).pop()?.split( '.' )[0];
-        const url       = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_DELETE}${this.#DEFAULT_FOLDER}|${storage}|${avatarId}`;
+        const url       = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_DELETE}${this.#DEFAULT_FOLDER}|${avatarId}`;
 
         const response = await fetch( url, {
             method: 'DELETE',
@@ -103,7 +86,6 @@ export class FileManagerService {
      */
     async save(
         file    : FileUpload,
-        storage : string,
         folder  : string = this.#DEFAULT_FOLDER,
         format  : string = this.#DEFAULT_FORMAT,
         quality : number = this.#DEFAULT_QUALITY
@@ -111,11 +93,39 @@ export class FileManagerService {
         const maxRetries = 2;
         let lastError: any;
 
+        const fileStream = file.createReadStream();
+        const chunks: Buffer[] = [];
+        try {
+            await pipeline(
+                fileStream,
+                new stream.Writable({
+                    write( chunk, _, callback ) {
+                        chunks.push( chunk );
+                        callback();
+                    }
+                })
+            );
+        } catch ( streamError ) {
+            this.#logger.error( `Error reading file stream for ${file.filename}:`, streamError.message );
+            throw new BadRequestException( `Failed to read file stream: ${streamError.message}` );
+        }
+
+        const fileBuffer        = Buffer.concat( chunks );
+        const detectedFileType  = await fileTypeFromBuffer( fileBuffer );
+        const actualMimeType    = detectedFileType ? detectedFileType.mime : file.mimetype;
+
         for ( let attempt = 1; attempt <= maxRetries; attempt++ ) {
             try {
                 this.#logger.log( `Attempt ${attempt} from ${maxRetries} to upload the file: ${file.filename}` );
 
-                return await this.#uploadFile( file, storage, folder, format, quality );
+                return await this.#uploadFile(
+                    fileBuffer,
+                    file.filename,
+                    actualMimeType,
+                    folder,
+                    format,
+                    quality
+                );
             } catch ( error ) {
                 lastError = error;
                 this.#logger.warn( `Attempt ${attempt} failed for the file ${file.filename}:`, error.message );
@@ -132,39 +142,24 @@ export class FileManagerService {
         throw new BadRequestException( message );
     }
 
-
     /**
-     * Private method that handles the actual file upload logic
+     * Private method that handles the actual file upload logic using a buffer.
+     * This method does NOT call createReadStream().
      */
     async #uploadFile(
-        file    : FileUpload,
-        storage : string,
-        folder  : string,
-        format  : string,
-        quality : number
+        fileBuffer  : Buffer,
+        filename    : string,
+        mimetype    : string,
+        folder      : string = this.#DEFAULT_FOLDER,
+        format      : string = this.#DEFAULT_FORMAT,
+        quality     : number = this.#DEFAULT_QUALITY
     ): Promise<CloudinaryUploadResponse> {
-        const formData          = new FormData();
-        const fileStream        = file.createReadStream();
-        const chunks: Buffer[]  = [];
+        const formData = new FormData();
+        const fileBlob = new File([ fileBuffer ], filename, { type: mimetype });
 
-        await pipeline(
-            fileStream,
-            new stream.Writable({
-                write( chunk, _, callback ) {
-                    chunks.push( chunk );
-                    callback();
-                }
-            })
-        );
+        formData.append( 'file', fileBlob, filename );
 
-        const fileBuffer        = Buffer.concat( chunks );
-        const detectedFileType  = await fileTypeFromBuffer( fileBuffer );
-        const actualMimeType    = detectedFileType ? detectedFileType.mime : file.mimetype;
-        const fileBlob          = new File([ fileBuffer ], file.filename, { type: actualMimeType });
-
-        formData.append( 'file', fileBlob, file.filename );
-
-        const url = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_UPLOAD}${folder}|${storage}?format=${format}&quality=${quality}`;
+        const url = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_UPLOAD}${folder}?format=${format}&quality=${quality}`;
 
         const response = await fetch( url, {
             method  : 'POST',
