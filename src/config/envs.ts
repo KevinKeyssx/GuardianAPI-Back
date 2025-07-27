@@ -18,6 +18,8 @@ interface EnvVars {
     REDIS_PORT              : number;
     REDIS_PASSWORD          : string;
     FILE_MANAGER_URL        : string;
+    FILE_MANAGER_DELETE     : string;
+    FILE_MANAGER_UPLOAD     : string;
 }
 
 const envsSchema = joi.object({
@@ -35,7 +37,9 @@ const envsSchema = joi.object({
     REDIS_HOST              : joi.string().required(),
     REDIS_PORT              : joi.number().required(),
     REDIS_PASSWORD          : joi.string().required(),
-    FILE_MANAGER_URL        : joi.string().required()
+    FILE_MANAGER_URL        : joi.string().required(),
+    FILE_MANAGER_DELETE     : joi.string().required(),
+    FILE_MANAGER_UPLOAD     : joi.string().required(),
 })
 .unknown( true );
 
@@ -63,5 +67,7 @@ export const ENVS = {
     REDIS_HOST              : envVars.REDIS_HOST,
     REDIS_PORT              : envVars.REDIS_PORT,
     REDIS_PASSWORD          : envVars.REDIS_PASSWORD,
-    FILE_MANAGER_URL        : envVars.FILE_MANAGER_URL
+    FILE_MANAGER_URL        : envVars.FILE_MANAGER_URL,
+    FILE_MANAGER_DELETE     : envVars.FILE_MANAGER_DELETE,
+    FILE_MANAGER_UPLOAD     : envVars.FILE_MANAGER_UPLOAD,
 }
