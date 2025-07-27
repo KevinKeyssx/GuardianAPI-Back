@@ -42,7 +42,7 @@ export class UserService implements OnModuleInit {
         currentUser     : User,
         file?           : FileUpload
     ) {
-        const avatar = file ? ( await this.fileManagerService.save( file, currentUser.id )).secure_url : null;
+        let avatar = file ? ( await this.fileManagerService.save( file )).secure_url.split( '/' ).pop() : undefined;
 
         try {
             const user = await this.prisma.user.create({
@@ -91,7 +91,7 @@ export class UserService implements OnModuleInit {
             orderBy : { createdAt: orderBy },
             include : this.#guardianIncludes(),
             where   : {
-                isActive    : true,
+                // isActive    : true,
                 apiUserId   : currentUser.id,
                 // [field]: {
                 //     contains    : search,
@@ -112,7 +112,7 @@ export class UserService implements OnModuleInit {
         const user = await this.prisma.user.findUnique({
             where: {
                 id,
-                isActive: true,
+                // isActive: true,
             },
             include: this.#guardianIncludes()
         }) as unknown as User;
@@ -131,17 +131,17 @@ export class UserService implements OnModuleInit {
         updateUserInput : UpdateUserInput,
         file?           : FileUpload
     ): Promise<UserResponse> {
-        let avatar : string | null = null;
+        let avatar : string | undefined = undefined;
 
         const existingUser = await this.findOne( currentUser, updateUserInput.id );
 
         try {
             if ( file ) {
                 if ( existingUser.avatar ) {
-                    await this.fileManagerService.delete( existingUser.avatar, existingUser.id );
+                    await this.fileManagerService.delete( existingUser.avatar );
                 }
 
-                avatar = ( await this.fileManagerService.save( file, existingUser.id )).secure_url;
+                avatar = ( await this.fileManagerService.save( file )).secure_url.split( '/' ).pop();
             }
 
             const user = await this.prisma.user.update({
@@ -165,7 +165,7 @@ export class UserService implements OnModuleInit {
         const user = await this.findOne( currentUser, id );
 
         if ( user.avatar ) {
-            await this.fileManagerService.delete( user.avatar, currentUser.id );
+            await this.fileManagerService.delete( user.avatar );
         }
 
         try {
