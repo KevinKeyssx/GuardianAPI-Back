@@ -136,8 +136,10 @@ export class UserService implements OnModuleInit {
         const existingUser = await this.findOne( currentUser, updateUserInput.id );
 
         try {
-            if ( file && existingUser.avatar ) {
-                await this.fileManagerService.delete( existingUser.avatar, currentUser.id );
+            if ( file ) {
+                if ( existingUser.avatar ) {
+                    await this.fileManagerService.delete( existingUser.avatar, existingUser.id );
+                }
 
                 avatar = ( await this.fileManagerService.save( file, existingUser.id )).secure_url;
             }
