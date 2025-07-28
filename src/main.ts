@@ -39,7 +39,7 @@ import { CsrfGuard }    from '@auth/guards/csrf-token.guard';
     });
 
     AuthModule.setupSwagger( app );
-    app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })); // Configura tus límites
+    app.use( graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
     await app.listen( ENVS.PORT );
     logger.log( `GuardianAPI listening on port ${ ENVS.PORT }` );
