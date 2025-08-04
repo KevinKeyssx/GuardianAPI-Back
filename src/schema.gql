@@ -130,6 +130,7 @@ type UserAttribute {
 
   """Value of the user attribute value"""
   value: JSON
+  valueId: ID
 }
 
 """Tipos posibles de atributos"""
