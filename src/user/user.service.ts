@@ -68,7 +68,7 @@ export class UserService implements OnModuleInit {
             }
         },
         pwdAdmins   : { where: { isActive: true }},
-        secrets     : { take: 1 }
+        secrets     : { take: 5 }
     });
 
 
