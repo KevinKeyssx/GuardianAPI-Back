@@ -1,4 +1,4 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 import { GraphQLJSON  } from 'graphql-scalars';
 
@@ -50,5 +50,8 @@ export class UserAttribute {
 
     @Field(() => GraphQLJSON, { description: 'Value of the user attribute value', nullable: true })
     value?: any;
+
+    @Field( () => ID, { nullable: true })
+    valueId?: string;
 
 }
