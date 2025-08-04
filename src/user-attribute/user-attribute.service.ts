@@ -113,7 +113,8 @@ export class UserAttributeService implements OnModuleInit {
 
         return attributes.map( attribute => ({
             ...attribute,
-            value: attribute.values?.[0]?.value ?? null
+            value: attribute.values?.[0]?.value ?? null,
+            valueId: attribute.values?.[0]?.id ?? null,
         }));
     }
 
