@@ -5,6 +5,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
 import { FileUpload }           from 'graphql-upload-minimal';
 import { fileTypeFromBuffer }   from 'file-type';
+import imageSize                from 'image-size';
 
 import { ENVS }                     from '@config/envs';
 import { CloudinaryUploadResponse } from '@common/services/filemanager/model-file.model';
@@ -159,7 +160,15 @@ export class FileManagerService {
 
         formData.append( 'file', fileBlob, filename );
 
-        const url = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_UPLOAD}${folder}?format=${format}&quality=${quality}`;
+        // Calculate 50% dimensions for image resizing
+        const { width, height } = this.#calculateResizedDimensions( fileBuffer );
+
+        // Build URL with resize parameters if dimensions were calculated successfully
+        let url = `${ENVS.FILE_MANAGER_URL}${ENVS.FILE_MANAGER_UPLOAD}${folder}?format=${format}&quality=${quality}`;
+
+        if ( width > 0 && height > 0 ) {
+            url += `&width=${width}&height=${height}`;
+        }
 
         const response = await fetch( url, {
             method  : 'POST',
@@ -174,4 +183,31 @@ export class FileManagerService {
 
         return await response.json() as CloudinaryUploadResponse;
     }
+
+
+    /**
+     * Calculates 50% dimensions of an image while maintaining aspect ratio
+     * Returns the new width and height scaled down to 50%
+     */
+    #calculateResizedDimensions( fileBuffer: Buffer ): { width: number, height: number } {
+        try {
+            const dimensions = imageSize( fileBuffer );
+
+            if ( !dimensions.width || !dimensions.height ) {
+                throw new Error( 'Could not determine image dimensions' );
+            }
+
+            const newWidth  = Math.round( dimensions.width * 0.5 );
+            const newHeight = Math.round( dimensions.height * 0.5 );
+
+            return {
+                width   : newWidth,
+                height  : newHeight
+            };
+        } catch ( error ) {
+            this.#logger.warn( 'Could not calculate image dimensions, using original size:', error.message );
+            return { width: 0, height: 0 };
+        }
+    }
+
 }
