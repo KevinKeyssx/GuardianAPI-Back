@@ -147,7 +147,7 @@ export class UserAttributeValuesService implements OnModuleInit {
             const attribute = await this.prisma.userAttributeValue.findUnique({
                 where   : {
                     id,
-                    userId: currentUser.id
+                    // userId: currentUser.id
                 },
                 include : {
                     userAttribute   : true,
@@ -166,7 +166,8 @@ export class UserAttributeValuesService implements OnModuleInit {
             if ( error ) throw new BadRequestException( error );
 
             return await this.prisma.userAttributeValue.update({
-                where   : { id, userId: currentUser.id },
+                where   : { id },
+                // where   : { id, userId: currentUser.id },
                 data    : { value },
                 include : {
                     userAttribute   : true,
