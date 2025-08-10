@@ -23,7 +23,7 @@ export class CreateUserAttributeInput {
 
     @IsString()
     @IsDefined()
-    @Field(() => String)
+    @Field( () => String )
     key: string;
 
     @IsOptional()
