@@ -22,7 +22,7 @@ export class UserAttributeValuesResolver {
     @UseGuards( SecretAuthGuard( true ))
     @Mutation( () => UserAttributeValue, { name: 'createUserAttributeValue' } )
     createUserAttributeValue(
-        @Args('createUserAttributeValueInput') createUserAttributeValueInput: CreateUserAttributeValueInput,
+        @Args( 'createUserAttributeValueInput' ) createUserAttributeValueInput: CreateUserAttributeValueInput,
         @CurrentUser() currentUser: User
     ) {
         return this.userAttributeValuesService.create( createUserAttributeValueInput, currentUser );
