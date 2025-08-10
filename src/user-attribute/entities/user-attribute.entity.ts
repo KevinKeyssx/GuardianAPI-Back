@@ -9,6 +9,9 @@ import { UserAttributeValue } from '@user-attribute-values/entities/user-attribu
 @ObjectType()
 export class UserAttribute {
 
+    @Field( () => ID )
+    id: string;
+
     @Field( () => String )
     key: string;
 
