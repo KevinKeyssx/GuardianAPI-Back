@@ -194,7 +194,10 @@ export class UserAttributeValuesService implements OnModuleInit {
                 }
             });
 
-            if ( !attribute ) throw new NotFoundException( `Attribute whit id ${id} not found` );
+            if ( !attribute ) {
+                throw new NotFoundException( `Attribute whit id ${id} not found` );
+            }
+
             if ( attribute.user.apiUserId !== currentUser.apiUserId ) {
                 throw new UnauthorizedException( 'You are not authorized to update this attribute' );
             }
