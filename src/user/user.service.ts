@@ -7,8 +7,8 @@ import {
     OnModuleInit
 } from '@nestjs/common';
 
-import { PrismaClient } from '@prisma/client';
-import { FileUpload }   from 'graphql-upload-minimal';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { FileUpload }           from 'graphql-upload-minimal';
 
 import { PaginationArgs }       from '@common/dto/args/pagination.args';
 import { SearchArgs }           from '@common/dto/args/search.args';
@@ -42,7 +42,9 @@ export class UserService implements OnModuleInit {
         currentUser     : User,
         file?           : FileUpload
     ) {
-        let avatar = file ? ( await this.fileManagerService.save( file )).secure_url.split( '/' ).pop() : undefined;
+        let avatar = file
+            ? ( await this.fileManagerService.save( file )).secure_url.split( '/' ).pop()
+            : undefined;
 
         try {
             const user = await this.prisma.user.create({
@@ -52,6 +54,30 @@ export class UserService implements OnModuleInit {
                     avatar
                 }
             });
+
+            const userAttributes = await this.prisma.userAttribute.findMany({
+                where: {
+                    userId: user.apiUserId || user.id,
+                    isActive: true,
+                    defaultValue: {
+                        not: Prisma.DbNull
+                    }
+                },
+                select: {
+                    id: true,
+                    defaultValue: true,
+                }
+            });
+
+            if ( userAttributes.length > 0 ) {
+                await this.prisma.userAttributeValue.createMany({
+                    data: userAttributes.map( attribute => ({
+                        userId          : user.id,
+                        userAttributeId : attribute.id,
+                        value           : attribute.defaultValue as Prisma.InputJsonValue
+                    }))
+                });
+            }
 
             return user;
         } catch ( error ) {
