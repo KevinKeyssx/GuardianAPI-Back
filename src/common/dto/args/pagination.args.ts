@@ -1,6 +1,6 @@
 import { ArgsType, Field, Int } from "@nestjs/graphql";
 
-import { IsEnum, IsNumber, IsOptional, IsString, Length, Max, Min } from "class-validator";
+import { IsEnum, IsNumber, IsOptional, Max, Min } from "class-validator";
 
 
 @ArgsType()
@@ -19,13 +19,6 @@ export class PaginationArgs {
     @Max( 5000 )
     @Field( () => Int, { nullable: true })
     each: number = 10;
-
-    // TODO: Agregar otro campo para el nombre del campo ordenado
-    @IsOptional()
-    @IsString()
-    @Length( 1, 100 )
-    @Field( () => String, { nullable: true })
-    field: string = 'name';
 
     @IsOptional()
     @IsEnum( [ 'asc', 'desc' ] )
