@@ -46,6 +46,8 @@ export class BasicUser {
     userRoles?: UserRole[];
 
     version: number;
+
+    @Field(() => Boolean)
     isVerified: boolean;
 
     @Field(() => Date)
