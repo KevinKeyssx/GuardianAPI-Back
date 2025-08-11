@@ -12,6 +12,7 @@ import { ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { JwtService }               from '@nestjs/jwt';
 
 // import Redis from 'ioredis';
+import { GraphQLUpload, FileUpload } from 'graphql-upload-minimal';
 
 import { SecretAuthGuard }      from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }          from '@auth/decorators/current-user.decorator';
@@ -30,8 +31,8 @@ import { UserAttribute }        from '@user-attribute/entities/user-attribute.en
 import { ValidateUser }         from '@user/entities/validate-user';
 import { ValidateTokenArgs }    from '@user/dto/validate-token.args';
 import { CreateUserInput }      from '@user/dto/create-user.input';
+import { FieldUserArgs }        from '@user/dto/filter/field-user.dto';
 
-import { GraphQLUpload, FileUpload } from 'graphql-upload-minimal';
 
 @Resolver( () => UserResponse )
 export class UserResolver {
@@ -62,9 +63,10 @@ export class UserResolver {
     findAll(
         @CurrentUser() user : User,
         @Args() search      : SearchArgs,
-        @Args() pagination  : PaginationArgs
+        @Args() pagination  : PaginationArgs,
+        @Args() field       : FieldUserArgs
     ) {
-        return this.userService.findAll( user, pagination, search );
+        return this.userService.findAll( user, pagination, search, field );
     }
 
 
