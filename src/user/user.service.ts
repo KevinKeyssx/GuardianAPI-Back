@@ -18,6 +18,7 @@ import { UpdateUserInput }      from '@user/dto/update-user.input';
 import { UserResponse }         from '@user/entities/user-response.';
 import { User }                 from '@user/entities/user.entity';
 import { CreateUserInput }      from '@user/dto/create-user.input';
+import { FieldUserArgs }        from '@user/dto/filter/field-user.dto';
 
 
 @Injectable()
@@ -107,23 +108,27 @@ export class UserService implements OnModuleInit {
 
     async findAll(
         currentUser: User,
-        { page, each, field, orderBy }: PaginationArgs,
-        { search }: SearchArgs
+        { page, each, orderBy } : PaginationArgs,
+        { search }              : SearchArgs,
+        { field, orderField }   : FieldUserArgs
     ): Promise<UserResponse[]> {
+        const where: Prisma.UserWhereInput = {
+            apiUserId: currentUser.id,
+        };
+
+        if ( field && search ) {
+            where[field] = {
+                contains    : search,
+                mode        : 'insensitive',
+            };
+        }
+
         const users = await this.prisma.user.findMany({
-            take    : each,
-            skip    : page,
-            // orderBy : { [field]: orderBy },
-            orderBy : { createdAt: orderBy },
+            // take    : each,
+            // skip    : page,
+            orderBy : { [orderField]: orderBy },
             include : this.#guardianIncludes(),
-            where   : {
-                // isActive    : true,
-                apiUserId   : currentUser.id,
-                // [field]: {
-                //     contains    : search,
-                //     mode        : 'insensitive',
-                // }
-            },
+            where
         }) as unknown as User[];
 
         return users.map( user => this.#getUserResponse( user ));
