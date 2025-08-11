@@ -106,15 +106,15 @@ export class UserAttributeService implements OnModuleInit {
             }},
             where: {
                 // userId,
-                isActive    : true,
+                // isActive    : true,
                 ...(keys && { key: { in: keys }}),
             }
         });
 
         return attributes.map( attribute => ({
             ...attribute,
-            value: attribute.values?.[0]?.value ?? null,
-            valueId: attribute.values?.[0]?.id ?? null,
+            value   : attribute.values?.[0]?.value  ?? null,
+            valueId : attribute.values?.[0]?.id     ?? null,
         }));
     }
 
@@ -132,7 +132,9 @@ export class UserAttributeService implements OnModuleInit {
             throw new NotFoundException( `User attribute whit id ${id} not found.` );
         }
 
-        if ( userAttribute.user.apiUserId !== currentUser.id ) {
+        const apiUserId = userAttribute.user.apiUserId || userAttribute.user.id;
+
+        if ( apiUserId !== currentUser.id ) {
             throw new ForbiddenException( 'You do not have permission to this attribute' );
         }
 
@@ -149,8 +151,8 @@ export class UserAttributeService implements OnModuleInit {
             const oldDefaultValue   = userAttribute.defaultValue;
             const updatedAttribute  = await this.prisma.userAttribute.update({
                 where: {
-                    id: updateUserAttributeInput.id,
-                    version: userAttribute.version
+                    id      : updateUserAttributeInput.id,
+                    version : userAttribute.version
                 },
                 data: {
                     ...updateUserAttributeInput,
