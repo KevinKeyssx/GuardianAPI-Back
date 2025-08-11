@@ -59,6 +59,7 @@ type User {
   isActive: Boolean!
   avatar: String
   userRoles: [UserRole!]
+  isVerified: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
   secrets: [SecretEntity!]
@@ -80,11 +81,12 @@ type UserResponse {
   isActive: Boolean!
   avatar: String
   userRoles: [UserRole!]
+  isVerified: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
   secret: SecretEntity
   pwdAdmin: PwdAdmin
-  roles(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [Role!]!
+  roles(search: String, page: Int = 0, each: Int = 10, orderBy: String = "asc"): [Role!]!
   attributes(keys: [String!]): [UserAttribute!]!
 }
 
@@ -187,10 +189,10 @@ type UserPermission {
 }
 
 type Query {
-  users(search: String, page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc"): [UserResponse!]!
+  users(search: String, page: Int = 0, each: Int = 10, orderBy: String = "asc", field: String = "email", orderField: String = "createdAt"): [UserResponse!]!
   user(id: ID): UserResponse!
   validateToken(token: String!, refresh: Boolean = false): ValidateUser!
-  roles(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Role!]!
+  roles(page: Int = 0, each: Int = 10, orderBy: String = "asc", search: String): [Role!]!
   role(id: ID!): Role!
   userAttributes(keys: [String!]): [UserAttribute!]!
   userAttributesByUserId(userId: ID!, keys: [String!]): [UserAttribute!]!
@@ -198,7 +200,7 @@ type Query {
   secret: [SecretEntity!]!
   userAttributeValues: [UserAttributeValue!]!
   userAttributeValue(id: ID!): UserAttributeValue!
-  permissions(page: Int = 0, each: Int = 10, field: String = "name", orderBy: String = "asc", search: String): [Permission!]!
+  permissions(page: Int = 0, each: Int = 10, orderBy: String = "asc", search: String): [Permission!]!
   permission(id: ID!): Permission!
   userPermissions: [UserPermission!]!
   userPermission(id: ID!): UserPermission!
