@@ -47,10 +47,11 @@ export class UserAttributeService implements OnModuleInit {
         currentUser             : User,
         createUserAttributeInput: CreateUserAttributeInput
     ): Promise<UserAttribute> {
-        const userCount = await this.prisma.user.count({ where: { apiUserId: currentUser.id }});
+        const userCount = await this.prisma.userAttribute.count({ where: { userId: currentUser.id }});
 
-        if ( userCount >= currentUser.plan!.maxAttributes )
+        if ( userCount >= currentUser.plan!.maxAttributes ) {
             throw new BadRequestException( 'Maximum attributes reached.' );
+        }
 
         try {
             const attribute = await this.prisma.userAttribute.create({
