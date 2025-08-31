@@ -218,7 +218,7 @@ type Mutation {
   removeUserAttribute(id: ID!): UserAttribute!
   generateSecret(createSecretInput: CreateSecretInput!): GenerateSecretResponse!
   expiresAtSecret(updateSecretInput: UpdateSecretInput!): SecretEntity!
-  removeSecret(id: String!): Boolean!
+  removeSecret(id: ID!): Boolean!
   activeGuardian(updatePwdAdminInput: UpdatePwdAdminInput!): PwdAdmin!
   changePassword(updatePwdInput: UpdatePwdInput!): PwdAdmin!
   assignRoleToUser(roleId: ID!, userId: ID!): UserRole!
@@ -312,7 +312,8 @@ input CreateSecretInput {
 }
 
 input UpdateSecretInput {
-  willExpireAt: DateTime!
+  name: String
+  willExpireAt: DateTime
   id: String!
 }
 
