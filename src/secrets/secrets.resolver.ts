@@ -1,5 +1,5 @@
-import { UseGuards }                        from '@nestjs/common';
-import { Resolver, Query, Mutation, Args }  from '@nestjs/graphql';
+import { ParseUUIDPipe, UseGuards }             from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID }  from '@nestjs/graphql';
 
 import { SecretAuthGuard }          from '@auth/guards/jwt-auth.guard';
 import { CurrentUser }              from '@auth/decorators/current-user.decorator';
@@ -14,6 +14,7 @@ import { User }                     from '@user/entities/user.entity';
 @UseGuards( SecretAuthGuard( false ))
 @Resolver( () => SecretEntity )
 export class SecretsResolver {
+
     constructor(
         private readonly secretsService: SecretsService
     ) {}
@@ -47,9 +48,10 @@ export class SecretsResolver {
 
     @Mutation(() => Boolean, { name: 'removeSecret' })
     async removeSecret(
-        @Args( 'id' ) id: string,
         @CurrentUser() user: User,
+        @Args( 'id', { type: () => ID }, ParseUUIDPipe ) id: string,
     ): Promise<boolean> {
-        return await this.secretsService.remove( user, id ) !== null;
+        return await this.secretsService.remove( user, id );
     }
+
 }
