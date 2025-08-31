@@ -1,17 +1,12 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, PartialType } from '@nestjs/graphql';
 
-import { IsDate, IsUUID } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
-import { IsFutureDate } from '@secrets/dto/is-future-date.valid';
+import { CreateSecretInput } from './create-secret.input';
 
 
 @InputType()
-export class UpdateSecretInput {
-
-    @IsDate()
-    @IsFutureDate()
-    @Field( () => Date )
-    willExpireAt: Date;
+export class UpdateSecretInput extends PartialType( CreateSecretInput ) {
 
     @IsUUID()
     @Field( () => String )
