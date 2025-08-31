@@ -116,7 +116,7 @@ export class SecretsService implements OnModuleInit {
 
     async updateExpiresAt(
         currentUser         : User,
-        { id, willExpireAt }: UpdateSecretInput
+        { id, name, willExpireAt }: UpdateSecretInput
     ): Promise<Secret> {
         try {
             const secret = await this.prisma.secret.findUnique({
@@ -141,6 +141,7 @@ export class SecretsService implements OnModuleInit {
                 },
                 data    : {
                     willExpireAt,
+                    name,
                     version: secret.version + 1
                 }
             });
@@ -171,14 +172,14 @@ export class SecretsService implements OnModuleInit {
     }
 
 
-    async remove( currentUser: User, id: string ) {
+    async remove( currentUser: User, id: string ): Promise<boolean> {
         try {
             return await this.prisma.secret.delete({
                 where: {
                     apiUserId: currentUser.id,
                     id
                 }
-            });
+            }) !== null;
         } catch ( error ) {
             throw PrismaException.catch( error, 'Secret' );
         }
