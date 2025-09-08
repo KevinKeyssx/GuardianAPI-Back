@@ -7,7 +7,8 @@ import {
     OnModuleInit
 } from '@nestjs/common';
 
-import { PrismaClient, UserAttribute } from '@prisma/client';
+import { PrismaClient, UserAttribute }  from '@prisma/client';
+import { JsonValue }                    from '@prisma/client/runtime/library';
 
 import { PrismaException }          from '@config/prisma-catch';
 import { AttributesArgs }           from '@common/dto/args/attributes.args';
@@ -148,41 +149,71 @@ export class UserAttributeService implements OnModuleInit {
         updateUserAttributeInput: UpdateUserAttributeInput
     ): Promise<UserAttribute> {
         try {
-            const userAttribute     = await this.findOne( currentUser, updateUserAttributeInput.id );
-            const oldDefaultValue   = userAttribute.defaultValue;
-            const updatedAttribute  = await this.prisma.userAttribute.update({
+            const userAttribute             = await this.findOne( currentUser, updateUserAttributeInput.id );
+            const { canChangeAll, ...rest } = updateUserAttributeInput;
+            const oldDefaultValue           = userAttribute.defaultValue;
+            const updatedAttribute          = await this.prisma.userAttribute.update({
                 where: {
                     id      : updateUserAttributeInput.id,
                     version : userAttribute.version
                 },
                 data: {
-                    ...updateUserAttributeInput,
+                    ...rest,
                     version: userAttribute.version + 1
                 }
             });
 
-            const hasDefaultValueChanged = 
-                updateUserAttributeInput.defaultValue !== undefined && 
-                JSON.stringify( updateUserAttributeInput.defaultValue ) !== JSON.stringify( oldDefaultValue );
+            const hasDefaultValueChanged = updateUserAttributeInput.defaultValue !== undefined
+                && JSON.stringify( updateUserAttributeInput.defaultValue ) !== JSON.stringify( oldDefaultValue );
 
-            if ( hasDefaultValueChanged ) {
+            let attrubteValueOld: JsonValue | undefined = undefined;
+
+            if ( canChangeAll ) {
+                const value = await this.prisma.userAttributeValue.findFirst({
+                    select : {
+                        value: true
+                    },
+                    where: {
+                        userAttributeId : updatedAttribute.id,
+                        userId          : currentUser.id
+                    }
+                });
+
+                attrubteValueOld = value?.value;
+            }
+
+            const hasDefaulctValueOld = JSON.stringify( attrubteValueOld ) !== JSON.stringify( oldDefaultValue );
+
+            if (( hasDefaultValueChanged || hasDefaulctValueOld ) && canChangeAll ) {
                 const subordinateUsers = await this.prisma.user.findMany({
                     where   : { apiUserId: currentUser.id },
                     select  : { id: true }
                 });
 
-                const attributeValuesUpdate = subordinateUsers.map( user => ({
-                    userId          : user.id,
-                    userAttributeId : updatedAttribute.id,
-                    value           : updateUserAttributeInput.defaultValue,
-                }));
+                const allRelevantUserIds = subordinateUsers.map( u => u.id );
 
-                await this.prisma.userAttributeValue.updateMany({
-                    data: attributeValuesUpdate
+                allRelevantUserIds.push( currentUser.id );
+
+                const existsUserAttributeValue = await this.prisma.userAttributeValue.count({
+                    where: {
+                        userAttributeId : updatedAttribute.id,
+                        userId          : allRelevantUserIds[0]
+                    }
                 });
 
-                const allRelevantUserIds = subordinateUsers.map( u => u.id );
-                allRelevantUserIds.push( currentUser.id );
+                if ( existsUserAttributeValue === 0 ) {
+                    const createAttributeValues = allRelevantUserIds.map( user => ({
+                        userId          : user,
+                        userAttributeId : updatedAttribute.id,
+                        value           : updateUserAttributeInput.defaultValue,
+                    }));
+
+                    await this.prisma.userAttributeValue.createMany({
+                        data:  createAttributeValues
+                    });
+
+                    return updatedAttribute;
+                }
 
                 if ( updateUserAttributeInput.defaultValue === null ) {
                     await this.prisma.userAttributeValue.deleteMany({
