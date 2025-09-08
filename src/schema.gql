@@ -145,7 +145,6 @@ enum AttributeType {
   LIST
   JSON
   DATETIME
-  UUID
 }
 
 type ValidateUser {
@@ -303,6 +302,7 @@ input UpdateUserAttributeInput {
   maxDate: String
   minDate: String
   id: ID!
+  canChangeAll: Boolean = false
   value: JSON
 }
 
