@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 
 import { PrismaClient, UserAttribute }  from '@prisma/client';
-import { isUUID }                       from 'class-validator';
 
 import { PrismaException }                      from '@config/prisma-catch';
 import { CreateUserAttributeValueInput }        from '@user-attribute-values/dto/create-user-attribute-value.input';
@@ -40,7 +39,6 @@ export class UserAttributeValuesService implements OnModuleInit {
         [AttributeType.LIST]        : Array.isArray( value ),
         [AttributeType.JSON]        : typeof value === 'object' && value !== null,
         [AttributeType.DATETIME]    : typeof value === 'string' && new Date( value ).toString() !== 'Invalid Date',
-        [AttributeType.UUID]        : typeof value === 'string' && isUUID( value )
     }[type] || false );
 
 
@@ -58,6 +56,11 @@ export class UserAttributeValuesService implements OnModuleInit {
         if ( type === AttributeType.STRING || type === AttributeType.LIST ) {
             if ( minLength !== null && value.length < minLength ) return `Value must be at least ${minLength} characters long`;
             if ( maxLength !== null && value.length > maxLength ) return `Value must be at most ${maxLength} characters long`;
+
+            if ( type === AttributeType.STRING && userAttr.pattern ) {
+                const regex = new RegExp( userAttr.pattern );
+                if ( !regex.test( value )) return `Value must match the pattern ${userAttr.pattern}`;
+            }
         }
 
         if ( type === AttributeType.DATETIME ) {
@@ -75,8 +78,8 @@ export class UserAttributeValuesService implements OnModuleInit {
     ) {
         const userAttribute = await this.prisma.userAttribute.findUnique({
             where: {
-                id: userAttributeId,
-                userId: currentUser.apiUserId ?? currentUser.id
+                id      : userAttributeId,
+                userId  : currentUser.apiUserId ?? currentUser.id
             }
         });
 
