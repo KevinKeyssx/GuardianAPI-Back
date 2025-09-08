@@ -192,7 +192,6 @@ enum AttributeType {
     LIST
     JSON
     DATETIME
-    UUID
 }
 
 model UserAttribute {
