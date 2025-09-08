@@ -8,15 +8,14 @@ export enum AttributeType {
     LIST        = 'LIST',
     JSON        = 'JSON',
     DATETIME    = 'DATETIME',
-    UUID        = 'UUID'
 }
 
 export type AttributeTypeValue = 
-    string | 
-    number | 
+    string  | 
+    number  | 
     boolean | 
-    object | 
-    Date | 
+    object  | 
+    Date    | 
     Array<string | number | boolean | object | Date> 
 
 
