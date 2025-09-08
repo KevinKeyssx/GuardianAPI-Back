@@ -14,6 +14,10 @@ export class UpdateUserAttributeInput extends PartialType( CreateUserAttributeIn
     id: string;
 
     @IsOptional()
+    @Field( () => Boolean, { nullable: true })
+    canChangeAll: boolean = false;
+
+    @IsOptional()
     @Field( () => GraphQLJSON, { nullable: true })
     value?: any;
 
