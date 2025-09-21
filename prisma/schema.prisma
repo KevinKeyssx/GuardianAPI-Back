@@ -2,16 +2,19 @@ generator client {
     provider = "prisma-client-js"
 }
 
+
 datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
 }
+
 
 enum PlanName {
     FREE
     BASIC
     PREMIUM
 }
+
 
 enum DiscountType {
     FIRST_TIME
@@ -43,60 +46,68 @@ model Plan {
     version     Int         @default(0)
 }
 
+
 model User {
-    id          String      @id @default(uuid())
-    email       String
-    nickname    String?
-    name        String?
-    birthdate   DateTime?
-    isActive    Boolean     @default(true)
-    avatar      String?
-    phone       String?
+    id              String      @id @default(uuid())
+    email           String
+    nickname        String?
+    name            String?
+    birthdate       DateTime?
+    isActive        Boolean     @default(true)
+    avatar          String?
+    phone           String?
 
-    planId      String?
-    plan        Plan?       @relation(fields: [planId], references: [id])
+    planId          String?
+    plan            Plan?       @relation(fields: [planId], references: [id])
 
-    apiUserId   String?
-    apiUser     User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id], onDelete: Cascade)
-    users       User[]      @relation("ApiUserHierarchy")
-    roles       Role[]
+    apiUserId       String?
+    apiUser         User?       @relation("ApiUserHierarchy", fields: [apiUserId], references: [id], onDelete: Cascade)
+    users           User[]      @relation("ApiUserHierarchy")
+    roles           Role[]
     userPermissions UserPermission[]
-    secrets     Secret[]
-    pwdAdmins   PwdAdmin[]
-    attributes  UserAttribute[]
+    secrets         Secret[]
+    pwdAdmins       PwdAdmin[]
+    attributes      UserAttribute[]
     attributeValues UserAttributeValue[]
-    userRoles   UserRole[]
-    permissions Permission[]
+    userRoles       UserRole[]
+    permissions     Permission[]
+    groups          Group[]
+    userGroups      UserGroup[]
+    rolePermissions RolePermission[]
 
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-    version     Int       @default(0)
-    isVerified  Boolean   @default(false)
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    version         Int       @default(0)
+    isVerified      Boolean   @default(false)
 
     @@index([isActive, apiUserId, email])
     @@unique([email, apiUserId])
     @@unique([nickname, apiUserId])
 }
 
+
 model Role {
-    id          String    @id @default(uuid())
-    name        String
-    description String?
-    isActive   Boolean  @default(true)
+    id              String    @id @default(uuid())
+    name            String
+    description     String?
+    isActive        Boolean  @default(true)
 
-    userId   String?
-    user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId          String?
+    user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    userRoles   UserRole[]
+    userRoles       UserRole[]
     rolePermissions RolePermission[]
 
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-    version     Int       @default(0)
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    version         Int       @default(0)
+
+    groupRoles GroupRole[]
 
     @@unique([userId, name])
     @@index([userId, name])
 }
+
 
 model UserRole {
     id         String   @id @default(uuid())
@@ -116,20 +127,22 @@ model UserRole {
 
 
 model Permission {
-    id String @id @default(uuid())
-    name String 
-    description String?
-    isActive   Boolean  @default(true)
+    id              String @id @default(uuid())
+    name            String 
+    description     String?
+    isActive        Boolean  @default(true)
 
-    userId   String
-    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId          String
+    user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     rolePermissions RolePermission[]
     userPermissions UserPermission[]
 
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @updatedAt
-    version     Int         @default(0)
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    version         Int       @default(0)
+
+    groupPermissions GroupPermission[]
 
     @@unique([name])
     @@index([name, userId, isActive])
@@ -137,34 +150,99 @@ model Permission {
 
 
 model RolePermission {
-    id String @id @default(uuid())
-    role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-    roleId String
+    id              String @id @default(uuid())
+    role            Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+    roleId          String
 
-    permissionId String
-    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+    permissionId    String
+    permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    userId          String?
+    user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
 
     @@unique([roleId, permissionId])
 }
 
 
 model UserPermission {
-    id String @id @default(uuid())
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+    id              String @id @default(uuid())
+    user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId          String
 
-    permissionId String
-    permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+    permissionId    String
+    permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
 
     @@index([userId, permissionId])
     @@unique([userId, permissionId])
 }
+
+
+model Group {
+    id          String        @id @default(uuid())
+    name        String
+    description String?       
+    isActive    Boolean       @default(true)
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+
+    // Relations
+    userId      String
+    user        User        @relation(fields: [userId], references: [id])
+
+    users    UserGroup[]
+    roles    GroupRole[]
+    perms    GroupPermission[]
+}
+
+
+model UserGroup {
+    id        String    @id @default(uuid())
+    userId    String
+    groupId   String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    user  User   @relation(fields: [userId], references: [id])
+    group Group  @relation(fields: [groupId], references: [id])
+
+    @@unique([userId, groupId])
+}
+
+model GroupRole {
+    id        String    @id @default(uuid())
+    groupId   String
+    roleId    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // Relations
+    group Group @relation(fields: [groupId], references: [id])
+    role  Role  @relation(fields: [roleId], references: [id])
+
+    @@unique([groupId, roleId])
+}
+
+model GroupPermission {
+    id           String      @id @default(uuid())
+    groupId      String
+    permissionId String
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+
+    // Relations
+    group      Group      @relation(fields: [groupId], references: [id])
+    permission Permission @relation(fields: [permissionId], references: [id])
+
+    @@unique([groupId, permissionId])
+}
+
 
 model Secret {
     id              String      @id @default(uuid())
@@ -184,6 +262,7 @@ model Secret {
     @@index([apiUserId, isActive])
 }
 
+
 enum AttributeType {
     STRING
     NUMBER
@@ -193,6 +272,7 @@ enum AttributeType {
     JSON
     DATETIME
 }
+
 
 model UserAttribute {
     id          String    @id @default(uuid())
@@ -223,6 +303,7 @@ model UserAttribute {
     @@index([userId])
     @@unique([userId, key])
 }
+
 
 model UserAttributeValue {
 
